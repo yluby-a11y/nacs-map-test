@@ -244,7 +244,7 @@ async function showMyLocation(){
 function clearDestination(){
  destinationSearchSequence++;recommendationRevision++;
  selectedWaypoint=null;if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}renderWaypoint();
- selectedNearbyCharger=null;courseRevision++;courseLine=null;courseLoading=false;courseError='';document.getElementById('chargingPanel').open=true;dest=null;renderFavorites();renderWaypoint();route=null;recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';
+ selectedNearbyCharger=null;courseRevision++;if(courseLayer){map.removeLayer(courseLayer);courseLayer=null;}courseLine=null;courseLoading=false;courseError='';document.getElementById('chargingPanel').open=true;dest=null;renderFavorites();renderWaypoint();route=null;recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';
  document.getElementById('destination').value='';
  document.getElementById('destResults').style.display='none';
  document.getElementById('routeInfo').style.display='none';
@@ -561,7 +561,7 @@ async function resolveFavorite(i){
  try{return await request;}finally{favoritePending.delete(i);}
 }
 function favoriteActions(f,i){return (!f.lat?'<button onclick="pendingFavoriteAction=null;findFavoritePlace('+i+')">위치 확인</button>':'')+'<button class="favorite-add" onclick="addFavoriteWaypoint('+i+')">'+(selectedWaypoint&&selectedWaypoint.name===f.name?'선택한 맛집':'이 맛집 선택')+'</button><button class="locate" onclick="focusFavorite('+i+')">지도에서 보기</button><details><summary>장소 정보</summary><button onclick="favoriteDestination('+i+')">목적지로 변경</button><a class="btn search" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/'+encodeURIComponent(f.name+' '+f.address)+'">장소 확인</a></details>';}
-let selectedNearbyCharger=null,foodScope='charger',foodPage=1,courseLine=null,courseLoading=false,courseError='',courseRevision=0;
+let selectedNearbyCharger=null,foodScope='charger',foodPage=1,courseLine=null,courseLoading=false,courseError='',courseRevision=0,courseLayer=null;
 function selectNearbyCharger(i){
  const c=navCoords[String(i)]||coords[String(i)];if(!c)return;
  selectedNearbyCharger={...c,name:items[i].name,index:i};document.getElementById('chargingSummary').textContent='1. 충전소 · '+items[i].name;
@@ -630,12 +630,12 @@ function naverRoutePoints(points){
  return {href:android?intent:ios?scheme:web,web,store,ios,label:'네이버지도 경유 길찾기'};
 }
 async function updateCourseRoute(){
- const revision=++courseRevision;courseLine=null;courseLoading=false;courseError='';
+ const revision=++courseRevision;if(courseLayer){map.removeLayer(courseLayer);courseLayer=null;}courseLine=null;courseLoading=false;courseError='';
  if(!selectedNearbyCharger||!myPos||!dest){renderFavorites();renderWaypoint();return;}
  if(items[selectedNearbyCharger.index].highwayRestArea&&!navCoords[String(selectedNearbyCharger.index)]){courseError='이 휴게소는 방향별 도착 위치 확인이 필요합니다.';renderFavorites();renderWaypoint();return;}
  courseLoading=true;renderFavorites();renderWaypoint();
  const points=[myPos,selectedNearbyCharger,dest];const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
- try{const response=await fetch('https://router.project-osrm.org/route/v1/driving/'+points.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson',{signal:controller.signal});const data=await response.json();if(revision!==courseRevision)return;const line=data.routes?.[0]?.geometry?.coordinates;if(!line||line.length<2)throw Error('경로 없음');courseLine=line.map(p=>({lon:p[0],lat:p[1]}));}
+ try{const response=await fetch('https://router.project-osrm.org/route/v1/driving/'+points.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson',{signal:controller.signal});const data=await response.json();if(revision!==courseRevision)return;const line=data.routes?.[0]?.geometry?.coordinates;if(!line||line.length<2)throw Error('경로 없음');courseLine=line.map(p=>({lon:p[0],lat:p[1]}));courseLayer=mapUI.geoJSON({type:'LineString',coordinates:line},{style:{weight:6,opacity:.85}}).addTo(map);}
  catch(e){if(revision!==courseRevision)return;courseError='경로를 계산하지 못했습니다. 경로 다시 계산을 눌러 주세요.';}
  finally{clearTimeout(timer);if(revision===courseRevision){courseLoading=false;renderFavorites();renderWaypoint();}}
 }
@@ -650,6 +650,7 @@ function renderWaypoint(){
  const safe=selectedNearbyCharger&&(!items[selectedNearbyCharger.index].highwayRestArea||!!navCoords[String(selectedNearbyCharger.index)]);
  if(myPos&&dest&&safe){const points=chosenCoursePoints(),naver=naverRoutePoints(points);box.innerHTML+='<div class="meta">현재 위치 → '+points.slice(1).map(p=>escapeHTML(p.name)).join(' → ')+'</div><div class="course-nav"><a class="btn kakao" target="_blank" rel="noopener" href="'+kakaoRoutePoints(points)+'">카카오맵 길찾기</a><a class="btn naver" href="'+escapeHTML(naver.href)+'" onclick="openWaypointNaver(event)">네이버지도 길찾기</a></div>';}
  else box.innerHTML+='<p class="meta">'+(!selectedNearbyCharger?'충전소를 먼저 선택해 주세요.':!safe?'방향별 좌표 미확인 휴게소입니다. 충전소의 장소 확인을 이용해 주세요.':!dest?'목적지를 먼저 선택해 주세요.':'내 위치를 누르면 선택 코스 길찾기를 사용할 수 있습니다.')+'</p>';
+ if(!(myPos&&dest&&safe))box.innerHTML+='<div class="course-nav"><button disabled style="opacity:.45">카카오맵 길찾기</button><button disabled style="opacity:.45">네이버지도 길찾기</button></div>';
  if(selectedNearbyCharger&&dest&&myPos)box.innerHTML+='<p class="meta">'+(courseLoading?'충전 경로 계산 중…':courseError||'')+'</p><button class="chip" onclick="updateCourseRoute()">경로 다시 계산</button>';
 }
 function editCharger(){document.getElementById('chargingPanel').open=true;const panel=document.getElementById('chargingPanel');if(panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth',block:'start'});}
