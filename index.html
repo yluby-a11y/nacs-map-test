@@ -65,7 +65,7 @@ const items=[{"operator":"TESLA","name":"서울 - 마곡","status":"Tesla 공식
 const mapUI=(()=>{
  const sdk=typeof kakao!=='undefined'&&kakao.maps;
  const point=p=>new sdk.LatLng(p[0],p[1]);
- let currentMap=null,activePopup=null;
+ let currentMap=null,activePopup=null,savedCenter=null;
  const closePopup=()=>{if(activePopup){activePopup.close();activePopup=null;}};
  function layer(objects,position){
   let owner=null,html='';
@@ -79,9 +79,9 @@ const mapUI=(()=>{
  return {
   map(id){
    const el=document.getElementById(id);
-   if(sdk){currentMap=new sdk.Map(el,{center:point([36.2,127.8]),level:12});if(sdk.ZoomControl)currentMap.addControl(new sdk.ZoomControl(),sdk.ControlPosition.RIGHT);if(sdk.MapTypeControl)currentMap.addControl(new sdk.MapTypeControl(),sdk.ControlPosition.TOPRIGHT);sdk.event.addListener(currentMap,'click',closePopup);window.addEventListener('resize',()=>{const center=currentMap.getCenter();currentMap.relayout();currentMap.setCenter(center);});}
+   if(sdk){currentMap=new sdk.Map(el,{center:point([36.2,127.8]),level:12});if(sdk.ZoomControl)currentMap.addControl(new sdk.ZoomControl(),sdk.ControlPosition.RIGHT);if(sdk.MapTypeControl)currentMap.addControl(new sdk.MapTypeControl(),sdk.ControlPosition.TOPRIGHT);savedCenter=point([36.2,127.8]);sdk.event.addListener(currentMap,'click',closePopup);sdk.event.addListener(currentMap,'dragend',()=>{savedCenter=currentMap.getCenter();});sdk.event.addListener(currentMap,'zoom_changed',()=>{savedCenter=currentMap.getCenter();});window.addEventListener('resize',()=>{currentMap.relayout();currentMap.setCenter(savedCenter);});}
    else{el.innerHTML='<div class="map-error" role="alert">카카오 지도를 불러오지 못했습니다. 카카오맵 사용 설정과 등록 도메인을 확인한 뒤 새로고침해 주세요. 아래 충전소 검색과 길찾기는 사용할 수 있습니다.</div>';}
-   return {native:currentMap,setView(p,zoom){if(sdk){currentMap.setCenter(point(p));currentMap.setLevel(Math.max(1,Math.min(14,19-zoom)));}return this;},removeLayer(x){x.remove();}};
+   return {native:currentMap,setView(p,zoom){if(sdk){savedCenter=point(p);currentMap.setCenter(savedCenter);currentMap.setLevel(Math.max(1,Math.min(14,19-zoom)));}return this;},removeLayer(x){x.remove();}};
   },
   layerGroup(){const children=new Set();return {addTo(){return this;},addLayer(x){children.add(x);},clearLayers(){children.forEach(x=>x.remove());children.clear();},native:currentMap};},
   marker(p){return layer(sdk?[new sdk.Marker({position:point(p)})]:[],p);},
