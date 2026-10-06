@@ -638,7 +638,7 @@ function confirmFavoritePlace(n){
  if(pendingFavoriteAction){const action=pendingFavoriteAction;pendingFavoriteAction=null;action(f);}
 }
 
-document.getElementById('favoriteSearch').addEventListener('input',renderFavorites);
+document.getElementById('favoriteSearch').addEventListener('input',()=>{favoritePlaceIndex=null;pendingFavoriteAction=null;document.getElementById('favoriteResolveResults').hidden=true;renderFavorites();});
 document.getElementById('showFavorites').addEventListener('change',renderFavorites);
 renderFavorites();
 locateFavorites();
