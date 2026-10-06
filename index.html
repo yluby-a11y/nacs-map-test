@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V45.1</title>
+<title>전국 NACS 충전지도 V45.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -23,6 +23,9 @@ button{background:#111827;color:white} .chip{background:#eef2f7;color:#334155} .
 .actions{display:flex;gap:6px;flex-wrap:wrap} a.kakao{background:#FEE500;color:#191919} a.search{background:#e8eef7;color:#1e3a5f} button.locate{background:#eef2f7;color:#111827}
 footer{padding:18px;font-size:11px;color:#64748b;text-align:center}
 .leaflet-popup-content{min-width:190px}
+a.naver{background:#03c75a;color:#fff}
+#naverHelp{padding:10px 14px;background:#f0fdf4;color:#166534;font-size:13px}
+#naverHelp a{color:#166534;font-weight:700;margin-right:12px}
 .sortbtn{background:#eef2f7!important;color:#334155!important;padding:8px 12px!important;border-radius:10px!important;font-size:13px!important}
 .sortbtn.active{background:#0f172a!important;color:#fff!important}
 </style>
@@ -32,11 +35,12 @@ footer{padding:18px;font-size:11px;color:#64748b;text-align:center}
 </style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.1</small></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.2</small></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p></header>
+<div id="naverHelp" hidden aria-live="polite"></div>
 <div class="notice" id="status">충전소 195개 위치데이터는 앱 내부에 저장되어 있습니다. 실행 중 충전소 위치를 인터넷에서 다시 찾지 않습니다.</div>
 <div id="map"></div>
 <div class="controls" style="top:66px"><input id="destination" placeholder="목적지 입력 (예: 경주월드, 서울역)" style="flex:2;min-width:210px;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:14px"><button onclick="setDestination()">목적지 검색</button><button id="recommendBtn" onclick="recommendSort()" style="background:#0f766e">추천 정렬</button>
-<div id="recommendHint" style="font-size:12px;color:#64748b;margin-top:5px;line-height:1.35">경로상 휴게소 → 가까운 순 → 우회시간 참고 · 카카오맵 경유 길찾기</div><button onclick="clearDestination()" style="background:#64748b">해제</button></div><div id="destResults" style="display:none;background:white;max-height:240px;overflow:auto;border-bottom:1px solid #e5e7eb"></div><div id="routeInfo" class="notice" style="display:none"></div><div class="controls" style="top:122px">
+<div id="recommendHint" style="font-size:12px;color:#64748b;margin-top:5px;line-height:1.35">경로상 휴게소 → 가까운 순 → 우회시간 참고 · 카카오맵 / 네이버지도 경유 길찾기</div><button onclick="clearDestination()" style="background:#64748b">해제</button></div><div id="destResults" style="display:none;background:white;max-height:240px;overflow:auto;border-bottom:1px solid #e5e7eb"></div><div id="routeInfo" class="notice" style="display:none"></div><div class="controls" style="top:122px">
   <input id="search" placeholder="충전소명 또는 운영사 검색">
   <button onclick="showMyLocation()">내 위치</button>
   <span class="chip active" data-op="ALL">전체</span><span class="chip" data-op="TESLA">TESLA</span>
@@ -97,7 +101,61 @@ function kakaoViaUrl(it,c){
  return 'https://map.kakao.com/link/by/car/'+encodeURIComponent('현재 위치')+','+myPos.lat+','+myPos.lon+'/'+encodeURIComponent(it.name)+','+c.lat+','+c.lon+'/'+encodeURIComponent(dest.name)+','+dest.lat+','+dest.lon;
 }
 
-function popup(it,c){return `<b>${it.name}</b><br>${it.operator} · ${it.connector}<br><br><a href="${kakaoTo(it,c)}" target="_blank">카카오맵 길찾기</a>`}
+// NAVER's official app scheme: route/car with v1lat/v1lng/v1name for a stop.
+function naverLinks(it,c,via=false){
+ const i=items.indexOf(it), verified=navCoords[String(i)];
+ const point=verified||c;
+ const valid=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&p.lat>=31.43&&p.lat<=44.35&&p.lon>=122.37&&p.lon<=132;
+ const search=!valid(point)||(it.highwayRestArea&&!verified);
+ const withStop=!search&&via&&valid(dest);
+ const query=`${it.kakaoPlaceQuery||it.name} ${it.kakaoPlaceQuery?'':(it.address||'')}`.trim();
+ const params=new URLSearchParams({appname:location.origin+location.pathname});
+ let action='search';
+ if(search){params.set('query',query);}
+ else{
+  action='route/car';
+  const end=withStop?dest:point;
+  params.set('dlat',end.lat);params.set('dlng',end.lon);params.set('dname',withStop?dest.name:it.name);
+  if(valid(myPos)){params.set('slat',myPos.lat);params.set('slng',myPos.lon);params.set('sname','현재 위치');}
+  if(withStop){params.set('v1lat',point.lat);params.set('v1lng',point.lon);params.set('v1name',it.name);}
+ }
+ const scheme=`nmap://${action}?${params.toString().replace(/\+/g,'%20')}`;
+ const webPoint=(p,name)=>{
+  const x=6378137*p.lon*Math.PI/180, y=6378137*Math.log(Math.tan(Math.PI/4+p.lat*Math.PI/360));
+  return `${x.toFixed(3)},${y.toFixed(3)},${encodeURIComponent(name)},,`;
+ };
+ const web=search?`https://map.naver.com/p/search/${encodeURIComponent(query)}`:
+  `https://map.naver.com/p/directions/${valid(myPos)?webPoint(myPos,'현재 위치'):'-'}/${webPoint(withStop?dest:point,withStop?dest.name:it.name)}/${withStop?webPoint(point,it.name):'-'}/car`;
+ const android=/Android/i.test(navigator.userAgent);
+ const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const store=android?'https://play.google.com/store/apps/details?id=com.nhn.android.nmap':'https://apps.apple.com/app/id311867728';
+ const intent=scheme.replace('nmap://','intent://')+'#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;S.browser_fallback_url='+encodeURIComponent(store)+';end';
+ return {href:android?intent:ios?scheme:web,web,store,ios,label:search?'네이버지도 장소 확인':withStop?'네이버지도 경유 길찾기':'네이버지도 길찾기'};
+}
+function naverButton(it,c,via=false){
+ const links=naverLinks(it,c,via),i=items.indexOf(it);
+ return `<a class="btn naver" href="${links.href.replace(/&/g,'&amp;')}" onclick="openNaverMap(event,${i},${via})">${links.label}</a>`;
+}
+let naverFallbackCleanup=null;
+function openNaverMap(event,i,via=false){
+ if(naverFallbackCleanup)naverFallbackCleanup();
+ const help=document.getElementById('naverHelp');help.hidden=true;
+ const links=naverLinks(items[i],coords[i],via);
+ event.currentTarget.href=links.href;
+ if(!links.ios)return; // Keep native user-click navigation for app activation.
+ const started=Date.now();
+ const clear=()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',clear);naverFallbackCleanup=null;};
+ const hidden=()=>{if(document.hidden)clear();};
+ const timer=setTimeout(()=>{
+  clear();
+  if(document.hidden||Date.now()-started>4000)return;
+  help.innerHTML=`네이버지도가 열리지 않으면 Safari에서 다시 누르거나 앱 설치를 확인해 주세요. <a href="${links.store}" target="_blank" rel="noopener">네이버지도 설치</a><a href="${links.web}" target="_blank" rel="noopener">웹 지도에서 보기</a>`;
+  help.hidden=false;
+ },2000);
+ naverFallbackCleanup=clear;
+ document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',clear);
+}
+function popup(it,c){return `<b>${it.name}</b><br>${it.operator} · ${it.connector}<br><br><a href="${kakaoTo(it,c)}" target="_blank">카카오맵 길찾기</a> ${naverButton(it,c)}`}
 function routeProgressKm(p){
  if(!route||route.length<2)return 99999;let best=99999,bp=99999,cum=0;
  for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],d=segDistanceKm(p,a,b),seg=hav(a,b);
@@ -118,7 +176,7 @@ function render(){
    });
  }
  arr.forEach((x,rank)=>{const {it,c,detour,progress}=x;if(c)L.marker([c.lat,c.lon]).addTo(markers).bindPopup(popup(it,c));const card=document.createElement('div');card.className='card';
- card.innerHTML=`<div class="row"><div class="name">${recommendMode?'⭐ ':''}${it.name}</div><div class="op">${it.operator}</div></div><div class="meta">${it.address?it.address+' · ':''}${it.status} · ${it.connector}${it.count?' · NACS '+it.count+'면':''}${recommendMode?' · 경로 이탈 '+detour.toFixed(1)+'km · 출발 후 약 '+Math.round(progress)+'km':''}</div><div class="actions">${recommendMode&&c?`<a class="btn kakao" target="_blank" href="${(it.highwayRestArea && !navCoords[String(items.indexOf(it))]) ? kakaoExactRestAreaUrl(it) : kakaoViaUrl(it, navCoords[String(items.indexOf(it))]||c)}">카카오맵 경유 길찾기</a>`:`<a class="btn kakao" target="_blank" href="${kakaoTo(it,c)}">${c?'카카오맵 길찾기':'카카오맵에서 찾기'}</a>`}<a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 확인</a>${c?`<button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button>`:''}</div>`;list.appendChild(card);});
+ card.innerHTML=`<div class="row"><div class="name">${recommendMode?'⭐ ':''}${it.name}</div><div class="op">${it.operator}</div></div><div class="meta">${it.address?it.address+' · ':''}${it.status} · ${it.connector}${it.count?' · NACS '+it.count+'면':''}${recommendMode?' · 경로 이탈 '+detour.toFixed(1)+'km · 출발 후 약 '+Math.round(progress)+'km':''}</div><div class="actions">${recommendMode&&c?`<a class="btn kakao" target="_blank" href="${(it.highwayRestArea && !navCoords[String(items.indexOf(it))]) ? kakaoExactRestAreaUrl(it) : kakaoViaUrl(it, navCoords[String(items.indexOf(it))]||c)}">카카오맵 경유 길찾기</a>`:`<a class="btn kakao" target="_blank" href="${kakaoTo(it,c)}">${c?'카카오맵 길찾기':'카카오맵에서 찾기'}</a>`}${naverButton(it,c,recommendMode)}<a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 확인</a>${c?`<button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button>`:''}</div>`;list.appendChild(card);});
  document.getElementById('status').textContent=recommendMode?`추천 ${arr.length}개 · 앱 내장 위치데이터 기준 · 실제 경로 15km 이내 · 출발지에서 만나는 순서`:`${arr.length}개 표시 · 지도 좌표 ${Object.keys(coords).length}/${items.length}개`;
 }
 let myPos=null,dest=null,route=null,routeLayer=null,recommendMode=false;
@@ -230,7 +288,7 @@ function renderRecommended(results){
   <div class="actions">${navVerified
     ? `<a class="btn kakao" target="_blank" href="${kakaoViaUrl(it,navCoords[String(x.i)])}">카카오맵 경유 길찾기</a>`
     : `<a class="btn kakao" target="_blank" href="${kakaoExactRestAreaUrl(it)}">카카오맵 장소 확인</a>`}
-    <a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 검색</a><button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button></div>`;
+    ${naverButton(it,c,true)}<a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 검색</a><button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button></div>`;
   list.appendChild(card);
  });
 }
@@ -331,7 +389,7 @@ async function recommendSort(){
       btn.innerHTML="추천 정렬";
       btn.style.opacity="";
     }
-    if(hint) hint.textContent="경로상 휴게소 → 가까운 순 → 우회시간 참고 · 카카오맵 경유 길찾기";
+    if(hint) hint.textContent="경로상 휴게소 → 가까운 순 → 우회시간 참고 · 카카오맵 / 네이버지도 경유 길찾기";
   }
 }
 
