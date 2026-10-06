@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V45.4</title>
+<title>전국 NACS 충전지도 V45.5</title>
 
 <style>
 *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
 header{padding:14px 16px;background:#111827;color:white;position:sticky;top:0;z-index:1000}
 header h1{font-size:18px;margin:0 0 4px} header p{font-size:12px;margin:0;color:#cbd5e1}
-.favorites-panel{margin:10px;padding:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px}.favorites-panel summary{font-weight:800;cursor:pointer}.favorite-controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.favorite-controls input[type="search"]{flex:1;min-width:180px;padding:10px;border:1px solid #d1d5db;border-radius:8px}.favorite-list{max-height:360px;overflow:auto;display:grid;gap:8px}.favorite-pin{background:#f59e0b;color:#422006;border:2px solid #fff;padding:4px 7px;border-radius:50%;box-shadow:0 1px 4px #666;font-size:18px}.favorite-add{background:#b45309}#waypointInfo{margin:10px;padding:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px}
+.favorites-panel{margin:10px;padding:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px}.favorites-panel summary{font-weight:800;cursor:pointer}.favorite-controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.favorite-controls input[type="search"]{flex:1;min-width:180px;padding:10px;border:1px solid #d1d5db;border-radius:8px}.favorite-list{max-height:360px;overflow:auto;display:grid;gap:8px}.favorite-pin{background:#f59e0b;color:#422006;border:1px solid #fff;width:18px;height:18px;padding:0;border-radius:50%;box-shadow:0 1px 3px #666;font-size:11px;line-height:16px;position:relative}.favorite-pin:after{content:"";position:absolute;inset:-7px}.nearby-group{margin:12px 0}.nearby-group h3{font-size:14px;margin:8px 0}.favorite-controls select{padding:8px;border:1px solid #d1d5db;border-radius:8px}.favorite-list{max-height:480px}.favorite-add{background:#b45309}#waypointInfo{margin:10px;padding:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px}
 #testServerBadge{font-size:11px;padding:3px 7px;margin-left:6px;border-radius:5px;background:#fbbf24;color:#422006;vertical-align:middle;white-space:nowrap}
 #map{height:46vh;min-height:330px;background:#e5e7eb}
 .controls{padding:10px;background:white;display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:66px;z-index:900;border-bottom:1px solid #e5e7eb}
@@ -37,7 +37,7 @@ a.naver{background:#03c75a;color:#fff}
 </style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.4</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.5</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -65,7 +65,7 @@ if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(l
     <button class="sortbtn" data-sort="detour" onclick="setResultSort('detour')">우회시간순</button>
   </div>
 </div>
-<details class="favorites-panel" id="favoritesPanel" open><summary>⭐ Tesla 전남 오너추천 맛집 · 464곳</summary><div class="favorite-controls"><input id="favoriteSearch" type="search" placeholder="맛집 이름·지역·메뉴 검색" aria-label="맛집 이름·지역·메뉴 검색"><label><input type="checkbox" id="showFavorites" checked> 맛집 지도 표시</label></div><div id="favoriteStatus" class="meta" aria-live="polite"></div><div id="favoriteResolveResults" hidden class="card"></div><div id="favoriteList" class="favorite-list"></div><p class="meta">공유 목록 기준 2026-10-06 · <a href="https://kko.to/9027A8TFTd" target="_blank" rel="noopener">원본 즐겨찾기</a> · 위치는 등록 주소 기준이며 출입구는 길찾기에서 확인해 주세요.</p></details>
+<details class="favorites-panel" id="favoritesPanel"><summary>🍽️ 근처 맛집 보기 · 충전소 주변 / 목적지 주변</summary><p class="meta" id="nearbyContext">충전소 목록에서 ‘근처 맛집’을 선택하면 주변 맛집을 볼 수 있습니다.</p><div class="favorite-controls"><input id="favoriteSearch" type="search" placeholder="맛집 이름·지역·메뉴 검색" aria-label="맛집 이름·지역·메뉴 검색"><label><input type="checkbox" id="showFavorites"> 맛집 지도 표시</label><label>주변 범위 <select id="favoriteRadius" aria-label="맛집 주변 범위"><option value="5">5km</option><option value="10">10km</option><option value="20">20km</option></select></label></div><div id="favoriteStatus" class="meta" aria-live="polite"></div><div id="favoriteResolveResults" hidden class="card"></div><div id="favoriteList" class="favorite-list"></div><p class="meta">공유 목록 기준 2026-10-06 · <a href="https://kko.to/9027A8TFTd" target="_blank" rel="noopener">원본 즐겨찾기</a> · 위치는 등록 주소 기준이며 출입구는 길찾기에서 확인해 주세요.</p></details>
 <div id="waypointInfo" hidden aria-live="polite"></div>
 <div id="list"></div>
 <footer>충전소 목록 기준 2026-10-02 · WATER 신규 지점은 순차 개통 상태를 확인하세요.</footer>
@@ -219,7 +219,7 @@ function render(){
    });
  }
  arr.forEach((x,rank)=>{const {it,c,detour,progress}=x;if(c)mapUI.marker([c.lat,c.lon]).addTo(markers).bindPopup(popup(it,c));const card=document.createElement('div');card.className='card';
- card.innerHTML=`<div class="row"><div class="name">${recommendMode?'⭐ ':''}${it.name}</div><div class="op">${it.operator}</div></div><div class="meta">${it.address?it.address+' · ':''}${it.status} · ${it.connector}${it.count?' · NACS '+it.count+'면':''}${recommendMode?' · 경로 이탈 '+detour.toFixed(1)+'km · 출발 후 약 '+Math.round(progress)+'km':''}</div><div class="actions">${recommendMode&&c?`<a class="btn kakao" target="_blank" href="${(it.highwayRestArea && !navCoords[String(items.indexOf(it))]) ? kakaoExactRestAreaUrl(it) : kakaoViaUrl(it, navCoords[String(items.indexOf(it))]||c)}">카카오맵 경유 길찾기</a>`:`<a class="btn kakao" target="_blank" href="${kakaoTo(it,c)}">${c?'카카오맵 길찾기':'카카오맵에서 찾기'}</a>`}${naverButton(it,c,recommendMode)}<a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 확인</a>${c?`<button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button>`:''}</div>`;list.appendChild(card);});
+ card.innerHTML=`<div class="row"><div class="name">${recommendMode?'⭐ ':''}${it.name}</div><div class="op">${it.operator}</div></div><div class="meta">${it.address?it.address+' · ':''}${it.status} · ${it.connector}${it.count?' · NACS '+it.count+'면':''}${recommendMode?' · 경로 이탈 '+detour.toFixed(1)+'km · 출발 후 약 '+Math.round(progress)+'km':''}</div><div class="actions">${recommendMode&&c?`<a class="btn kakao" target="_blank" href="${(it.highwayRestArea && !navCoords[String(items.indexOf(it))]) ? kakaoExactRestAreaUrl(it) : kakaoViaUrl(it, navCoords[String(items.indexOf(it))]||c)}">카카오맵 경유 길찾기</a>`:`<a class="btn kakao" target="_blank" href="${kakaoTo(it,c)}">${c?'카카오맵 길찾기':'카카오맵에서 찾기'}</a>`}${naverButton(it,c,recommendMode)}<button class="locate" onclick="selectNearbyCharger(${items.indexOf(it)})">충전소 선택 · 근처 맛집</button><a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 확인</a>${c?`<button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button>`:''}</div>`;list.appendChild(card);});
  document.getElementById('status').textContent=recommendMode?`추천 ${arr.length}개 · 앱 내장 위치데이터 기준 · 실제 경로 15km 이내 · 출발지에서 만나는 순서`:`${arr.length}개 표시 · 지도 좌표 ${Object.keys(coords).length}/${items.length}개`;
 }
 let myPos=null,dest=null,route=null,routeLayer=null,recommendMode=false;
@@ -243,7 +243,7 @@ async function showMyLocation(){
 function clearDestination(){
  destinationSearchSequence++;recommendationRevision++;
  selectedWaypoint=null;if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}renderWaypoint();
- dest=null;route=null;recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';
+ selectedNearbyCharger=null;dest=null;renderFavorites();renderWaypoint();route=null;recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';
  document.getElementById('destination').value='';
  document.getElementById('destResults').style.display='none';
  document.getElementById('routeInfo').style.display='none';
@@ -302,7 +302,7 @@ async function setDestination(){
   window._destCandidates=results;box.innerHTML=results.map((r,i)=>'<button data-lat="'+r.lat+'" data-lon="'+r.lon+'" onclick="chooseDestination('+i+')" style="display:block;width:100%;text-align:left;background:white;color:#111827;border-bottom:1px solid #e5e7eb;border-radius:0;padding:11px"><b>'+escapeHTML(r.name)+'</b><br><span style="font-size:11px;color:#64748b">'+escapeHTML(r.display)+'</span></button>').join('');
  }catch(e){if(sequence===destinationSearchSequence)box.innerHTML='<div style="padding:10px">'+escapeHTML(e.message)+' 잠시 후 다시 시도해 주세요.</div>';}
 }
-function chooseDestination(i){const r=window._destCandidates[i];if(!r)return;dest={lat:r.lat,lon:r.lon,name:r.name};invalidateRecommendation();recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';document.getElementById('destination').value=r.name;document.getElementById('destResults').style.display='none';document.getElementById('routeInfo').style.display='block';document.getElementById('routeInfo').textContent='목적지 선택 완료: '+r.name+' · 이제 추천 정렬을 눌러 주세요.';if(destMarker)map.removeLayer(destMarker);destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup('목적지: '+escapeHTML(r.name));render();renderWaypoint();}
+function chooseDestination(i){const r=window._destCandidates[i];if(!r)return;dest={lat:r.lat,lon:r.lon,name:r.name};invalidateRecommendation();recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='none';document.getElementById('destination').value=r.name;document.getElementById('destResults').style.display='none';document.getElementById('routeInfo').style.display='block';document.getElementById('routeInfo').textContent='목적지 선택 완료: '+r.name+' · 이제 추천 정렬을 눌러 주세요.';if(destMarker)map.removeLayer(destMarker);destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup('목적지: '+escapeHTML(r.name));render();renderWaypoint();renderFavorites();}
 let lastRecommendedResults=[];
 let resultSortMode="recommend";
 function sortRecommendedResults(results,mode){
@@ -336,7 +336,7 @@ function renderRecommended(results){
   <div class="actions">${navVerified
     ? `<a class="btn kakao" target="_blank" href="${kakaoViaUrl(it,navCoords[String(x.i)])}">카카오맵 경유 길찾기</a>`
     : `<a class="btn kakao" target="_blank" href="${kakaoExactRestAreaUrl(it)}">카카오맵 장소 확인</a>`}
-    ${naverButton(it,c,true)}<a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 검색</a><button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button></div>`;
+    ${naverButton(it,c,true)}<button class="locate" onclick="selectNearbyCharger(${x.i})">충전소 선택 · 근처 맛집</button><a class="btn search" target="_blank" href="${kakaoSearch(it)}">장소 검색</a><button class="locate" onclick="map.setView([${c.lat},${c.lon}],14);window.scrollTo({top:0,behavior:'smooth'})">지도에서 보기</button></div>`;
   list.appendChild(card);
  });
 }
@@ -562,20 +562,36 @@ async function resolveFavorite(i){
  try{return await request;}finally{favoritePending.delete(i);}
 }
 function favoriteActions(f,i){
- return `${!f.lat?`<button onclick="pendingFavoriteAction=null;findFavoritePlace(${i})">위치 확인</button>`:''}<button class="locate" onclick="focusFavorite(${i})">지도에서 보기</button><button onclick="favoriteDestination(${i})">목적지 설정</button><button class="favorite-add" onclick="addFavoriteWaypoint(${i})">경유지 추가</button><a class="btn kakao" target="_blank" rel="noopener" href="${kakaoTo(f,f.lat?f:null)}">카카오맵 길찾기</a>${f.lat?`<a class="btn naver" href="${escapeHTML(naverLinks(f,f).href)}" onclick="openFavoriteNaver(event,${i})">네이버지도 길찾기</a>`:''}<a class="btn search" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/${encodeURIComponent(f.name+' '+f.address)}">장소 확인</a>`;
+ return `${!f.lat?`<button onclick="pendingFavoriteAction=null;findFavoritePlace(${i})">위치 확인</button>`:''}<button class="locate" onclick="focusFavorite(${i})">지도에서 보기</button><button onclick="favoriteDestination(${i})">목적지 설정</button><button class="favorite-add" onclick="addFavoriteWaypoint(${i})">맛집 선택 · 경유지 추가</button><a class="btn kakao" target="_blank" rel="noopener" href="${kakaoTo(f,f.lat?f:null)}">카카오맵 길찾기</a>${f.lat?`<a class="btn naver" href="${escapeHTML(naverLinks(f,f).href)}" onclick="openFavoriteNaver(event,${i})">네이버지도 길찾기</a>`:''}<a class="btn search" target="_blank" rel="noopener" href="https://map.kakao.com/link/search/${encodeURIComponent(f.name+' '+f.address)}">장소 확인</a>`;
+}
+let selectedNearbyCharger=null;
+function selectNearbyCharger(i){
+ const c=navCoords[String(i)]||coords[String(i)];if(!c)return;
+ selectedNearbyCharger={...c,name:items[i].name,index:i};
+ document.getElementById('favoriteSearch').value='';document.getElementById('favoritesPanel').open=true;document.getElementById('showFavorites').checked=true;
+ renderFavorites();renderWaypoint();const panel=document.getElementById('favoritesPanel');if(panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function nearbyFavorites(center,query,radius){
+ return favorites.map((f,i)=>({f,i,distance:f.lat&&center?hav(center,f):Infinity})).filter(x=>(!query||[x.f.name,x.f.address,x.f.memo].join(' ').toLowerCase().includes(query))&&(!center||x.distance<=radius)).sort((a,b)=>a.distance-b.distance||a.i-b.i);
 }
 function renderFavorites(){
  const query=document.getElementById('favoriteSearch').value.trim().toLowerCase(),list=document.getElementById('favoriteList');list.innerHTML='';favoriteMarkers.clearLayers();
- let count=0;const show=document.getElementById('showFavorites').checked;
- favorites.forEach((f,i)=>{
-  if(query&&![f.name,f.address,f.memo].join(' ').toLowerCase().includes(query))return;
-  count++;const card=document.createElement('div');card.className='card favorite-card';card.dataset.favoriteId=f.id;
-  if(f.lat){card.dataset.lat=f.lat;card.dataset.lon=f.lon;card.dataset.coordSource=f.coordSource||'kakao_address';}
-  card.innerHTML=`<div class="name">⭐ ${escapeHTML(f.name)}</div><div class="meta">${escapeHTML(f.address)}${f.locationAddress?'<br>확인한 현재 주소: '+escapeHTML(f.locationAddress):''}${f.memo?'<br>'+escapeHTML(f.memo):''}<br>${f.lat?'주소 위치 확인':'위치 확인 대기'}</div><div class="actions">${favoriteActions(f,i)}</div>`;list.appendChild(card);
-  if(show&&f.lat)mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(favoriteMarkers).bindPopup(`<b>⭐ ${escapeHTML(f.name)}</b><div class="meta">${escapeHTML(f.address)}</div><div class="actions">${favoriteActions(f,i)}</div>`);
+ const radius=Number(document.getElementById('favoriteRadius').value)||5,show=document.getElementById('showFavorites').checked,marked=new Set();
+ const groups=[];if(selectedNearbyCharger)groups.push({title:'충전소 주변 · '+selectedNearbyCharger.name,center:selectedNearbyCharger});if(dest)groups.push({title:'목적지 주변 · '+dest.name,center:dest});
+ if(query)groups.push({title:'전체 즐겨찾기 검색',center:null});
+ document.getElementById('nearbyContext').textContent=selectedNearbyCharger?'선택한 충전소: '+selectedNearbyCharger.name+' · 직선거리 기준, 실제 이동 거리는 길찾기로 확인해 주세요.':dest?'목적지 주변 맛집을 먼저 볼 수 있습니다. 충전소의 ‘근처 맛집’을 누르면 두 목록을 함께 보여드립니다.':'충전소 목록에서 ‘근처 맛집’을 선택하거나 목적지를 정해 주세요. 전체 즐겨찾기는 검색으로 찾을 수 있습니다.';
+ let total=0;groups.forEach(group=>{
+  const matches=nearbyFavorites(group.center,query,radius);total+=matches.length;
+  const section=document.createElement('section');section.className='nearby-group';const heading=document.createElement('h3');heading.textContent=group.title+' · '+matches.length+'곳';section.appendChild(heading);
+  if(!matches.length){const empty=document.createElement('p');empty.className='meta';empty.textContent='등록된 맛집이 없습니다. 범위를 넓히거나 전체 검색을 이용해 주세요.';section.appendChild(empty);}
+  const visible=matches.slice(0,8);visible.forEach(({f,i,distance})=>{
+   const card=document.createElement('div');card.className='card favorite-card';card.dataset.favoriteId=f.id;
+   if(f.lat){card.dataset.lat=f.lat;card.dataset.lon=f.lon;card.dataset.coordSource=f.coordSource||'kakao_address';}
+   card.innerHTML='<div class="name">⭐ '+escapeHTML(f.name)+(group.center?' · '+distance.toFixed(1)+'km':'')+'</div><div class="meta">'+escapeHTML(f.address)+(f.locationAddress?'<br>확인한 현재 주소: '+escapeHTML(f.locationAddress):'')+(f.memo?'<br>'+escapeHTML(f.memo):'')+'<br>'+(f.lat?'주소 위치 확인':'위치 확인 대기')+'</div><div class="actions">'+favoriteActions(f,i)+'</div>';section.appendChild(card);
+   if(show&&f.lat&&!marked.has(i)){marked.add(i);mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(favoriteMarkers).bindPopup('<b>⭐ '+escapeHTML(f.name)+'</b><div class="meta">'+escapeHTML(f.address)+'</div><div class="actions">'+favoriteActions(f,i)+'</div>');}
+  });if(matches.length>8){const hint=document.createElement('p');hint.className='meta';hint.textContent='가까운 8곳을 표시합니다. 이름·메뉴 검색으로 원하는 맛집을 좁혀 보세요.';section.appendChild(hint);}list.appendChild(section);
  });
- const located=favorites.filter(f=>Number.isFinite(f.lat)).length;
- document.getElementById('favoriteStatus').textContent=`맛집 ${count}/${favorites.length}곳 · 위치 확인 ${located}/${favorites.length}곳${favoriteLoading?' · 확인 중…':located<favorites.length?' · 위치 미확인 '+(favorites.length-located)+'곳':''}`;
+ document.getElementById('favoriteStatus').textContent='공유 즐겨찾기 '+favorites.length+'곳 · 주변 '+radius+'km · '+(groups.length?'목록 '+total+'곳':'충전소 또는 목적지 선택 대기')+(favorites.some(f=>!f.lat)?' · 위치 미확인 2곳은 전체 검색 후 확인':'');
 }
 async function locateFavorites(){
  if(favoriteLoading||typeof kakao==='undefined'||!kakao.maps.services||!favorites.some(f=>!f.lat&&f.coordStatus!=='needs_confirmation'))return;favoriteLoading=true;renderFavorites();let cursor=0;
@@ -590,8 +606,8 @@ async function favoriteAction(i,action){
 function focusFavorite(i){return favoriteAction(i,f=>{map.setView([f.lat,f.lon],14);window.scrollTo({top:0,behavior:'smooth'});});}
 function favoriteDestination(i){return favoriteAction(i,f=>{window._destCandidates=[{...f,display:f.address}];chooseDestination(0);map.setView([f.lat,f.lon],14);window.scrollTo({top:0,behavior:'smooth'});});}
 function invalidateRecommendation(){recommendationRevision++;recommendMode=false;lastRecommendedResults=[];route=null;if(routeLayer){map.removeLayer(routeLayer);routeLayer=null;}document.getElementById('resultSort').style.display='none';render();}
-function addFavoriteWaypoint(i){return favoriteAction(i,f=>{selectedWaypoint={name:f.name,lat:f.lat,lon:f.lon};if(waypointMarker)map.removeLayer(waypointMarker);waypointMarker=mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(map).bindPopup('경유지: '+escapeHTML(f.name));invalidateRecommendation();renderWaypoint();});}
-function clearWaypoint(){selectedWaypoint=null;if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}invalidateRecommendation();renderWaypoint();}
+function addFavoriteWaypoint(i){return favoriteAction(i,f=>{selectedWaypoint={name:f.name,lat:f.lat,lon:f.lon};if(waypointMarker)map.removeLayer(waypointMarker);waypointMarker=mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(map).bindPopup('경유지: '+escapeHTML(f.name));if(!selectedNearbyCharger)invalidateRecommendation();renderWaypoint();});}
+function clearWaypoint(){selectedWaypoint=null;if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}if(!selectedNearbyCharger)invalidateRecommendation();renderWaypoint();}
 function drivingPoints(charger=null){
  const stops=[];if(selectedWaypoint)stops.push(selectedWaypoint);if(charger)stops.push(charger);
  if(stops.length>1&&route){const line=route.map(p=>[p.lon,p.lat]);stops.sort((a,b)=>routeProgressKm(line,a).alongKm-routeProgressKm(line,b).alongKm);}
@@ -610,13 +626,17 @@ function naverRoutePoints(points){
  const intent=scheme.replace('nmap://','intent://')+'#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;S.browser_fallback_url='+encodeURIComponent(store)+';end';
  return {href:android?intent:ios?scheme:web,web,store,ios,label:'네이버지도 경유 길찾기'};
 }
+function chosenCoursePoints(){return drivingPoints(selectedNearbyCharger?{...selectedNearbyCharger}:null);}
 function renderWaypoint(){
- const box=document.getElementById('waypointInfo');box.hidden=!selectedWaypoint;if(!selectedWaypoint)return;
- box.innerHTML=`<b>⭐ 경유지: ${escapeHTML(selectedWaypoint.name)}</b><button onclick="clearWaypoint()" style="margin-left:8px">경유지 해제</button><div class="meta">${dest?'추천 정렬을 누르면 이 경유지를 포함해 충전소를 추천합니다.':'목적지를 선택해 주세요.'}</div>`;
- if(myPos&&dest){const points=drivingPoints(),naver=naverRoutePoints(points);box.innerHTML+=`<div class="actions"><a class="btn kakao" target="_blank" href="${kakaoRoutePoints(points)}">카카오맵 맛집 경유 길찾기</a><a class="btn naver" href="${escapeHTML(naver.href)}" onclick="openWaypointNaver(event)">네이버지도 맛집 경유 길찾기</a></div>`;}
+ const box=document.getElementById('waypointInfo');box.hidden=!selectedWaypoint&&!selectedNearbyCharger;if(box.hidden)return;
+ box.innerHTML=(selectedNearbyCharger?'<b>⚡ 선택한 충전소: '+escapeHTML(selectedNearbyCharger.name)+'</b><button onclick="clearSelectedCharger()" style="margin-left:8px">충전소 해제</button><br>':'')+(selectedWaypoint?'<b>⭐ 선택한 맛집: '+escapeHTML(selectedWaypoint.name)+'</b><button onclick="clearWaypoint()" style="margin-left:8px">맛집 해제</button>':'<div class="meta">아래 주변 맛집에서 경유지를 추가해 주세요.</div>');
+ const safe=!selectedNearbyCharger||!items[selectedNearbyCharger.index].highwayRestArea||!!navCoords[String(selectedNearbyCharger.index)];
+ if(myPos&&dest&&safe){const points=chosenCoursePoints(),naver=naverRoutePoints(points);box.innerHTML+='<div class="meta">현재 위치 → '+points.slice(1).map(p=>escapeHTML(p.name)).join(' → ')+'</div><div class="actions"><a class="btn kakao" target="_blank" rel="noopener" href="'+kakaoRoutePoints(points)+'">카카오맵 선택 코스 길찾기</a><a class="btn naver" href="'+escapeHTML(naver.href)+'" onclick="openWaypointNaver(event)">네이버지도 선택 코스 길찾기</a></div>';}
+ else box.innerHTML+='<div class="meta">'+(!safe?'이 휴게소는 방향별 도착 좌표 확인이 필요합니다. 충전소 카드의 장소 확인을 이용해 주세요.':!dest?'목적지를 먼저 선택해 주세요.':'내 위치를 누르면 선택 코스 길찾기 버튼이 표시됩니다.')+'</div>';
 }
+function clearSelectedCharger(){selectedNearbyCharger=null;renderFavorites();renderWaypoint();}
 function openFavoriteNaver(event,i){followNaverLink(event,naverLinks(favorites[i],favorites[i]));}
-function openWaypointNaver(event){followNaverLink(event,naverRoutePoints(drivingPoints()));}
+function openWaypointNaver(event){followNaverLink(event,naverRoutePoints(chosenCoursePoints()));}
 function followNaverLink(event,links){
  if(naverFallbackCleanup)naverFallbackCleanup();const help=document.getElementById('naverHelp');help.hidden=true;event.currentTarget.href=links.href;if(!links.ios)return;
  const clear=()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',clear);naverFallbackCleanup=null;};
@@ -640,6 +660,7 @@ function confirmFavoritePlace(n){
 
 document.getElementById('favoriteSearch').addEventListener('input',()=>{favoritePlaceIndex=null;pendingFavoriteAction=null;document.getElementById('favoriteResolveResults').hidden=true;renderFavorites();});
 document.getElementById('showFavorites').addEventListener('change',renderFavorites);
+document.getElementById('favoriteRadius').addEventListener('change',renderFavorites);
 renderFavorites();
 locateFavorites();
 
