@@ -799,7 +799,7 @@ function followNaverLink(event,links){
 let favoritePlaceChoices=[],favoritePlaceIndex=null,pendingFavoriteAction=null;
 let favoriteInfoRevision=0,favoriteInfoChoices=[],favoriteInfoIndex=-1;
 const placeInfoCache=new Map();
-function safePlaceURL(url){try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='place.map.kakao.com'&&/^\/\d+\/?$/.test(u.pathname)?u.href:'';}catch(e){return '';}}
+function safePlaceURL(url){try{const u=new URL(url);if(!['https:','http:'].includes(u.protocol)||u.hostname!=='place.map.kakao.com'||!/^\/\d+\/?$/.test(u.pathname))return '';u.protocol='https:';return u.href;}catch(e){return '';}}
 function placeNameKey(s){return String(s||'').replace(/\s|[()|·]/g,'').toLowerCase();}
 function placeQueries(f){const tokens=(f.searchQuery||f.name).replace(/\|/g,' ').trim().split(/\s+/);return [...new Set([tokens.slice(0,2).join(' '),f.searchQuery||f.name])];}
 async function lookupFavoritePlaces(f){
@@ -853,7 +853,7 @@ function updateHeaderProgress(){
 }
 function favoriteBrief(f){
  const explicit=f.menu||f.name.split(/\s+/).slice(2).filter(word=>/(정식|찌개|국밥|갈비|육회|막걸리|짬뽕|국수|냉면|피자|커피|돈까스|돈카츠|우동|제육|쌍화차|장어|게장|삼계탕)/.test(word)).join(' ');
- return (explicit?'<b>목록에 적힌 메뉴:</b> '+escapeHTML(explicit)+'<br>':'')+(f.memo?'<b>추천 메모:</b> '+escapeHTML(f.memo)+'<br>':'')+'<button class="chip" onclick="openFavoriteInfo('+favorites.indexOf(f)+')">메뉴·평점·리뷰 확인</button>';
+ return (explicit?'<b>목록에 적힌 메뉴:</b> '+escapeHTML(explicit)+'<br>':'')+(f.memo?'<b>추천 메모:</b> '+escapeHTML(f.memo)+'<br>':'')+'메뉴·평점·리뷰는 장소 확인에서 볼 수 있습니다.';
 }
 
 let returnRevision=0,returnProof=null;
