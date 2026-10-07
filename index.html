@@ -956,7 +956,7 @@ function resetTrip(){tripCardFullRange=null;lastCardRoute=null;document.getEleme
  document.querySelectorAll('[data-op]').forEach(el=>el.classList.toggle('active',el.dataset.op==='ALL'));
  tripPreferences={mode:'range',rangeKm:300,socPercent:null,fullRangeKm:null,reserveKm:50,preferSupercharger:false};
  document.getElementById('batteryMode').value='range';for(const id of ['batteryRange','batterySoc','batteryFullRange'])document.getElementById(id).value='';document.getElementById('batteryReserve').value='50';document.getElementById('battery80Range').value='';document.getElementById('preferSupercharger').checked=false;
- updateBatteryFields();
+ updateBatteryFields();document.getElementById('batteryHelp').textContent='미입력 시 300km · 도착 여유 50km';document.getElementById('routeInfo').textContent='목적지 검색 후에는 주행가능거리를 입력하고, 아래 추천 정렬을 눌러주세요.';document.getElementById('routeInfo').style.display='block';document.getElementById('recommendHint').textContent='';
  document.getElementById('planDeparture').value='';document.getElementById('planChargeStay').value='30';document.getElementById('planFoodStay').value='60';document.getElementById('scheduleOutput').innerHTML='';document.getElementById('scheduleStatus').textContent='현재 코스를 초기화했습니다. 저장한 일정은 유지됩니다.';document.getElementById('status').textContent='출발지와 목적지 또는 방문할 장소를 선택해 주세요.';
  render();renderFavorites();renderWaypoint();
 }
