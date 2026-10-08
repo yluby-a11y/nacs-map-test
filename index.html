@@ -531,7 +531,7 @@ function setResultSort(mode){
  if(recommendationBusy||!['recommend','distance','detour','tesla'].includes(mode))return;
  const prefer=mode==='tesla';document.getElementById('preferSupercharger').checked=prefer;tripPreferences.preferSupercharger=prefer;resultSortMode=mode;invalidateReturnProof();
  if(!recommendMode||!lastRecommendedResults.length){syncResultSortControls();if(mode==='recommend'||mode==='tesla')return recommendSort();return;}
- renderRecommended(sortRecommendedResults(lastRecommendedResults,mode));
+ renderRecommended(sortRecommendedResults(lastRecommendedResults,mode));const status=document.getElementById('status');status.textContent=status.textContent.replace(/ · 슈퍼차저 우선$/,'')+(prefer?' · 슈퍼차저 우선':'');
 }
 function renderRecommended(results){
  syncResultSortControls();
