@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nacs-map-api",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-07",
+  "workers_dev": false,
+  "observability": {"enabled": false},
+  "env": {
+    "staging": {
+      "name": "nacs-map-api-test", "workers_dev": true,
+      "vars": {"DEPLOYMENT_ENV":"staging","ALLOWED_ORIGINS":"https://yluby-a11y.github.io"},
+      "d1_databases": [{"binding":"DB","database_name":"nacs-map-test","database_id":"REPLACE_WITH_TEST_DATABASE_ID","migrations_dir":"migrations"}],
+      "ratelimits": [
+        {"name":"API_LIMITER","namespace_id":"458701","simple":{"limit":120,"period":60}},
+        {"name":"UPSTREAM_LIMITER","namespace_id":"458702","simple":{"limit":200,"period":60}}
+      ]
+    },
+    "production": {
+      "name": "nacs-map-api-prod", "workers_dev": true,
+      "vars": {"DEPLOYMENT_ENV":"production","ALLOWED_ORIGINS":"https://yluby-a11y.github.io"},
+      "d1_databases": [{"binding":"DB","database_name":"nacs-map-prod","database_id":"REPLACE_WITH_SEPARATE_PRODUCTION_DATABASE_ID","migrations_dir":"migrations"}],
+      "ratelimits": [
+        {"name":"API_LIMITER","namespace_id":"458711","simple":{"limit":120,"period":60}},
+        {"name":"UPSTREAM_LIMITER","namespace_id":"458712","simple":{"limit":200,"period":60}}
+      ]
+    }
+  }
+}

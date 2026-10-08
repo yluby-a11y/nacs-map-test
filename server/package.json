@@ -1,0 +1,1 @@
+{"name":"nacs-map-api","private":true,"type":"module","scripts":{"test":"node --test test/*.test.mjs","dev":"wrangler dev --env staging","deploy:staging":"wrangler deploy --env staging"}}
