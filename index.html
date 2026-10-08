@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2</title>
+<title>전국 NACS 충전지도 V2.1</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -46,7 +46,7 @@ a.naver{background:#03c75a;color:#fff}
 <style>.food-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none}.food-heading::-webkit-details-marker{display:none}#foodSummary{white-space:nowrap}#foodSummary:before{content:"▶ ";font-size:12px}#favoritesPanel[open] #foodSummary:before{content:"▼ "}.food-heading .food-tabs{margin:0;gap:4px;flex-wrap:nowrap}.food-heading .food-tabs button{font-size:11px;padding:8px 7px;white-space:nowrap}.map-display{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b}.map-toggle{background:#eef2f7;color:#334155;font-size:12px;padding:8px 12px}.map-toggle.active{background:#0f766e;color:white}.favorite-controls{margin:10px 0}.favorite-controls label{font-size:12px;color:#64748b}@media(max-width:380px){.food-heading{gap:6px}.food-heading .food-tabs button{padding:8px 5px;font-size:10px}}</style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.1</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -830,11 +830,12 @@ async function shareTeslaPlace(addressOnly=false){
  // Android receivers get one plain EXTRA_TEXT instead of mixed URL metadata.
  // The browser cannot observe Tesla's eventual acceptance or vehicle receipt.
  const android=/Android/i.test(navigator.userAgent),text=addressOnly?place.address:(place.address?place.address+'\n\n':'')+place.url;
- try{await navigator.share(android||addressOnly?{text}:{title:place.title,url:place.url});help.textContent='공유 메뉴를 닫았습니다. Tesla 앱과 차량에서 전달된 장소를 확인해 주세요. 앱에서 오류가 나오면 아래 주소만 공유를 시도해 주세요.';showTeslaConfirmation(place);}
+ try{await navigator.share(android||addressOnly?{text}:{title:place.title,url:place.url});help.textContent='공유 메뉴를 닫았습니다.';showTeslaConfirmation(place);}
  catch(e){if(e.name==='AbortError')help.textContent='공유를 취소했습니다.';else teslaShareFallback(place,'공유 메뉴를 열지 못했습니다. 지도 앱에서 장소를 열고 공유 → Tesla를 선택해 주세요.');}
 }
 let lastTeslaConfirmation=null;
-function showTeslaConfirmation(place,scroll=true){lastTeslaConfirmation=place;const box=document.getElementById('teslaConfirm');box.hidden=false;box.innerHTML='<h3>차량 내비게이션 주소 확인</h3><p><b>'+escapeHTML(place.title)+'</b></p><p style="font-size:18px;font-weight:700">'+escapeHTML(place.address||'주소 정보를 확인하지 못했습니다. Tesla 앱에서 장소명과 위치를 확인해 주세요.')+'</p><p class="meta">차량의 목적지 주소와 대조해 주세요. 휴게소는 진행 방향도 확인하세요. 차량 수신 여부는 이 웹에서 확인할 수 없습니다.</p>';if(scroll&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});}
+function confirmTeslaAddress(){const place=teslaSharePlace();if(place)showTeslaConfirmation(place);}
+function showTeslaConfirmation(place,scroll=true){lastTeslaConfirmation=place;const box=document.getElementById('teslaConfirm');box.hidden=false;box.innerHTML='<h3>차량 내비게이션 주소 확인</h3><p><b>'+escapeHTML(place.title)+'</b></p><p style="font-size:18px;font-weight:700">'+escapeHTML(place.address||'주소 정보를 확인하지 못했습니다. Tesla 앱에서 장소명과 위치를 확인해 주세요.')+'</p>';if(scroll&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});}
 function teslaShareFallback(place,message){const help=document.getElementById('teslaShareStatus');help.textContent=message;const a=document.createElement('a');a.href=place.url;a.target='_blank';a.rel='noopener';a.textContent='장소 공유 대안';help.appendChild(a);}
 let teslaChosenPointKey='';
 function updateTeslaPlace(){const p=teslaSharePlace();if(p)teslaChosenPointKey=p.url;lastTeslaConfirmation=null;document.getElementById('teslaConfirm').hidden=true;}
@@ -849,7 +850,7 @@ function renderWaypoint(){invalidateReturnProof();
  box.innerHTML+='<p>🚩 '+escapeHTML(myPos?originName():'출발지를 선택해 주세요.')+'</p><p>🏁 '+escapeHTML(end?end.name:'목적지 또는 경유지를 추가해 주세요.')+'</p>';
  if(ready){const points=tripPoints(),naver=naverRoutePoints(points);box.innerHTML+='<div class="meta">'+points.map(p=>escapeHTML(p.name)).join(' → ')+'</div><div class="course-nav"><a class="btn kakao" target="_blank" rel="noopener" href="'+kakaoRoutePoints(points)+'">카카오맵 길찾기</a><a class="btn naver" href="'+escapeHTML(naver.href)+'" onclick="openWaypointNaver(event)">네이버지도 길찾기</a></div>';}
  else{box.innerHTML+='<p class="meta">'+(!safe?'위치 미확인 충전소가 포함돼 있습니다. 카카오 위치 확인으로 시설·주소를 먼저 확인해 주세요.':!myPos?'출발지를 검색하거나 현재 위치를 선택해 주세요.':'목적지 또는 충전소·맛집을 선택해 주세요.')+'</p><div class="course-nav"><button disabled style="opacity:.45">카카오맵 길찾기</button><button disabled style="opacity:.45">네이버지도 길찾기</button></div>';}
- if(ready){const points=tripPoints();box.innerHTML+='<div style="margin-top:14px"><b>Tesla 앱으로 장소 보내기</b><div><select id="teslaPlace" aria-label="테슬라에 보낼 장소" onchange="updateTeslaPlace()">'+points.slice(1).map((p,i)=>'<option value="'+(i+1)+'"'+(teslaChosenPointKey===('https://maps.google.com/?q='+p.lat+','+p.lon)?' selected':'')+'>'+escapeHTML(p.name)+'</option>').join('')+'</select> <button onclick="shareTeslaPlace()">공유 → Tesla</button></div><p class="meta" id="teslaShareStatus" aria-live="polite">휴대폰 공유 메뉴에서 Tesla를 선택하세요. 한 번에 장소 하나를 보냅니다. 코스 전체와 경유지 순서는 자동 전달되지 않습니다. 차량의 현재 위치에서 안내합니다. 경유지 포함 코스는 Tesla 앱의 위치 → 내비게이션 → 경로 편집 → 경유지 추가 → 차량으로 보내기를 이용하세요.</p><details><summary>공유 오류가 나면</summary><p class="meta">Tesla 앱에서 차량 연결을 확인하세요. 지도 링크를 처리하지 못하면 주소만 공유를 시도하고, 차량에서 장소를 확인해 주세요. 휴게소는 진행 방향을 확인하세요.</p><button onclick="shareTeslaPlace(true)">주소만 공유</button></details><div id="teslaConfirm" hidden style="margin-top:12px;padding:12px;background:white;border:2px solid #0f766e;border-radius:10px" aria-live="polite"></div></div>';}
+ if(ready){const points=tripPoints();box.innerHTML+='<div style="margin-top:14px"><b>Tesla 앱으로 장소 보내기</b><div><select id="teslaPlace" aria-label="테슬라에 보낼 장소" onchange="updateTeslaPlace()">'+points.slice(1).map((p,i)=>'<option value="'+(i+1)+'"'+(teslaChosenPointKey===('https://maps.google.com/?q='+p.lat+','+p.lon)?' selected':'')+'>'+escapeHTML(p.name)+'</option>').join('')+'</select> <button onclick="shareTeslaPlace()">공유 → Tesla</button> <button onclick="confirmTeslaAddress()">주소확인</button></div><p class="meta" id="teslaShareStatus" aria-live="polite"></p><div id="teslaConfirm" hidden style="margin-top:12px;padding:12px;background:white;border:2px solid #0f766e;border-radius:10px" aria-live="polite"></div></div>';}
  if(myPos&&end&&(courseLoading||courseError))box.innerHTML+='<p class="meta">'+(courseLoading?'선택 경로 계산 중…':courseError)+'</p>'+(courseError?'<button onclick="updateCourseRoute()">경로 계산 재시도</button>':'');
  if(lastTeslaConfirmation&&ready&&tripPoints().slice(1).some(p=>'https://maps.google.com/?q='+p.lat+','+p.lon===lastTeslaConfirmation.url))showTeslaConfirmation(lastTeslaConfirmation,false);else lastTeslaConfirmation=null;
 }
