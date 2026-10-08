@@ -264,9 +264,9 @@ async function verifiedSession(){
 }
 async function apiFetch(input,options={}){
  const target=new URL(typeof input==='string'?input:input.url||input.toString(),location.href);if(target.origin!==new URL(KAKAO_ROUTE_BASE).origin)return fetch(input,options);
- // Authentication occurs before starting each network timeout, so interactive verification gets enough time.
+ // Preserve caller cancellation; verification is shared across concurrent requests.
  const token=await verifiedSession();const headers=new Headers(options.headers);headers.set('Authorization','Bearer '+token);
- const signal=options.signal?.aborted?AbortSignal.timeout(70000):options.signal;const r=await fetch(input,{...options,headers,signal});
+ if(options.signal?.aborted)throw options.signal.reason||Error('요청이 취소됐습니다.');const signal=options.signal;const r=await fetch(input,{...options,headers,signal});
  if(r.status===401){apiSession=null;const fresh=await verifiedSession();headers.set('Authorization','Bearer '+fresh);return fetch(input,{...options,headers,signal:AbortSignal.timeout(70000)});}return r;
 }
 
@@ -1203,5 +1203,6 @@ document.getElementById('destination').addEventListener('keydown',e=>{if(e.key==
 document.getElementById('search').addEventListener('input',render);
 document.querySelectorAll('.chip').forEach(x=>x.onclick=()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');selectedOp=x.dataset.op;render();});
 loadVehicleSettings();render();renderLocationCandidates(null,null);
+if(typeof document.readyState==='string')loadServerCatalog();
 </script>
 </body></html>
