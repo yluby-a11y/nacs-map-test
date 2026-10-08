@@ -253,12 +253,12 @@ async function verifiedSession(){
  if(apiSession&&apiSession.expires*1000>Date.now()+30000)return apiSession.token;
  if(apiSessionPending)return apiSessionPending;
  apiSessionPending=(async()=>{
-  const response=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/config');if(!response.ok)throw Error('보안 검증 설정을 확인하지 못했습니다.');const config=await response.json();
+  const response=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/config',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('보안 검증 설정을 확인하지 못했습니다.');const config=await response.json();
   let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='position:fixed;z-index:10000;left:50%;top:35%;transform:translateX(-50%);padding:18px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 8px 40px #0003;max-width:90vw';document.body.appendChild(panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인 중';panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
   try{
    if(!window.turnstile)await new Promise((resolve,reject)=>{let script=document.getElementById('turnstileLoader');if(!script){script=document.createElement('script');script.id='turnstileLoader';script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';document.head.appendChild(script);}script.addEventListener('load',resolve,{once:true});script.addEventListener('error',()=>reject(Error('보안 확인에 연결하지 못했습니다.')),{once:true});setTimeout(()=>reject(Error('보안 확인 시간이 초과됐습니다. 새로고침해 주세요.')),15000);});
    const challenge=await new Promise((resolve,reject)=>{let widget;const timeout=setTimeout(()=>{if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인을 완료하지 못했습니다. 새로고침해 주세요.'));},120000);widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',callback:token=>{clearTimeout(timeout);window.turnstile.remove(widget);resolve(token);},'error-callback':()=>{clearTimeout(timeout);if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인에 실패했습니다. 새로고침해 주세요.'));}});});
-   const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenge})});if(!r.ok)throw Error('보안 확인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');apiSession=await r.json();return apiSession.token;
+   const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenge}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('보안 확인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');apiSession=await r.json();return apiSession.token;
   }finally{panel.remove();}
  })();try{return await apiSessionPending;}finally{apiSessionPending=null;}
 }
@@ -266,7 +266,7 @@ async function apiFetch(input,options={}){
  const target=new URL(typeof input==='string'?input:input.url||input.toString(),location.href);if(target.origin!==new URL(KAKAO_ROUTE_BASE).origin)return fetch(input,options);
  // Preserve caller cancellation; verification is shared across concurrent requests.
  const token=await verifiedSession();const headers=new Headers(options.headers);headers.set('Authorization','Bearer '+token);
- if(options.signal?.aborted)throw options.signal.reason||Error('요청이 취소됐습니다.');const signal=options.signal;const r=await fetch(input,{...options,headers,signal});
+ if(options.signal?.aborted)throw options.signal.reason||Error('요청이 취소됐습니다.');const {timeoutMs=70000,...fetchOptions}=options;const signal=options.signal||AbortSignal.timeout(timeoutMs);const r=await fetch(input,{...fetchOptions,headers,signal});
  if(r.status===401){apiSession=null;const fresh=await verifiedSession();headers.set('Authorization','Bearer '+fresh);return fetch(input,{...options,headers,signal:AbortSignal.timeout(70000)});}return r;
 }
 
@@ -276,7 +276,7 @@ let catalogSource='loading',catalogLoadTask=null;
 async function loadServerCatalog(){
  if(catalogLoadTask)return catalogLoadTask;
  catalogLoadTask=(async()=>{try{
-  const get=async path=>{const r=await apiFetch(KAKAO_ROUTE_BASE+path,{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('목록 응답 오류');return r.json();};
+  const get=async path=>{const r=await apiFetch(KAKAO_ROUTE_BASE+path,{timeoutMs:12000});if(!r.ok)throw Error('목록 응답 오류');return r.json();};
   const meta=await get('/v1/catalog');if(!['V2.9','V2.14'].includes(meta.version)||meta.chargers!==195||meta.restaurants!==464)throw Error('목록 버전 확인 필요');
   const collect=async kind=>{const rows=[];let cursor='';for(let page=0;page<4;page++){const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));if(!Array.isArray(data.places))throw Error('목록 형식 오류');rows.push(...data.places);if(!data.nextCursor)return rows;if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;}throw Error('목록 초과');};
   const [chargers,restaurants]=await Promise.all([collect('chargers'),collect('restaurants')]);
@@ -700,7 +700,7 @@ async function serverRecommendation(kind,extra={}){
  const body={version:1,kind,origin:clean(myPos),destination:clean(dest||effectiveDestination()),stops:routeStops.map(clean),priority:routePriority,preference:chargerScope==='rest-priority'?'rest':tripPreferences.preferSupercharger?'tesla':'recommend',rangeKm:tripPreferences.rangeKm??300,range80Km:tripPreferences.range80Km??null,overrides:Object.keys(coordQuality).filter(i=>coordQuality[i]==='user_kakao').slice(-10).map(i=>({index:Number(i),lat:navCoords[i].lat,lon:navCoords[i].lon})),...extra};
  body.origin=clean(body.origin);body.destination=clean(body.destination);body.stops=body.stops.map(clean);if(body.places)body.places=body.places.map(clean);
  const key=JSON.stringify(body),cached=recommendationMemo.get(key);if(cached&&Date.now()-cached.time<180000)return JSON.parse(cached.json);if(recommendationRequests.has(key))return JSON.parse(await recommendationRequests.get(key));
- const task=(async()=>{const r=await apiFetch(KAKAO_ROUTE_BASE+'/v1/recommendations',{method:'POST',headers:{'Content-Type':'application/json'},body:key,signal:AbortSignal.timeout(70000)});if(!r.ok){const retry=r.headers.get('Retry-After');throw Object.assign(Error(r.status===429?(retry?'반복 요청이 많아 잠시 제한되었습니다. '+Math.ceil(Number(retry)/60)+'분 후 다시 시도해 주세요.':'서버 이용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.'):'추천 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'),{status:r.status});}const data=await r.json();if(data.version!==1||!Array.isArray(data.results))throw Error('추천 응답 형식을 확인하지 못했습니다.');const json=JSON.stringify(data);if(!data.failedQueries){recommendationMemo.set(key,{time:Date.now(),json});while(recommendationMemo.size>12)recommendationMemo.delete(recommendationMemo.keys().next().value);}return json;})();recommendationRequests.set(key,task);try{return JSON.parse(await task);}finally{recommendationRequests.delete(key);}
+ const task=(async()=>{const r=await apiFetch(KAKAO_ROUTE_BASE+'/v1/recommendations',{method:'POST',headers:{'Content-Type':'application/json'},body:key,timeoutMs:70000});if(!r.ok){const retry=r.headers.get('Retry-After');throw Object.assign(Error(r.status===429?(retry?'반복 요청이 많아 잠시 제한되었습니다. '+Math.ceil(Number(retry)/60)+'분 후 다시 시도해 주세요.':'서버 이용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.'):'추천 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'),{status:r.status});}const data=await r.json();if(data.version!==1||!Array.isArray(data.results))throw Error('추천 응답 형식을 확인하지 못했습니다.');const json=JSON.stringify(data);if(!data.failedQueries){recommendationMemo.set(key,{time:Date.now(),json});while(recommendationMemo.size>12)recommendationMemo.delete(recommendationMemo.keys().next().value);}return json;})();recommendationRequests.set(key,task);try{return JSON.parse(await task);}finally{recommendationRequests.delete(key);}
 }
 
 async function recommendSortCore(){
@@ -752,6 +752,11 @@ function renderLocationCandidates(line,target,id='locationCandidates'){
  const nearby=rows.filter(r=>!r.opposite&&r.near<=35),rest=rows.filter(r=>!nearby.includes(r));const card=r=>'<div class="card" style="margin:8px 0;border:1px solid #fde68a"><b>'+escapeHTML(r.it.name)+'</b> <span class="op">'+escapeHTML(r.it.operator)+'</span><p class="meta">'+escapeHTML(r.address||'주소 대조 필요')+'<br>위치 확인 필요'+(r.opposite?' · 입력 경로와 반대 방향일 수 있음':'')+' · 확인 전 거리·우회·배터리 수치 미산정</p><a class="btn kakao" target="_blank" rel="noopener" href="'+chargerMapSearchURL(r.i)+'">카카오맵에서 확인</a> <button class="locate" onclick="checkChargerLocation('+r.i+',this)">검색 위치를 코스에 적용</button> <a class="btn search" target="_blank" rel="noopener" href="'+chargerOfficialURL(r.i)+'">운영사 공식 정보</a></div>';
  box.innerHTML='<details '+(nearby.length?'open':'')+'><summary><b>위치 확인할 충전소 · '+rows.length+'곳</b></summary><p class="meta">충전소를 제외하지 않고 후보로 유지합니다. 주소 위치를 기준으로 경로 주변일 가능성이 있는 '+nearby.length+'곳을 먼저 표시합니다. 확인 전에는 대략 좌표로 길찾기하지 않습니다.</p>'+nearby.map(card).join('')+(rest.length?'<details><summary>그 밖의 확인 후보 '+rest.length+'곳</summary>'+rest.map(card).join('')+'</details>':'')+'</details>';
 }
+function directionWord(name){
+ const m=(name||"").match(/(서울|인천|부산|대구|광주|대전|울산|춘천|양양|강릉|속초|삼척|포항|순천|통영|창원|양평|평택|제천|청주|영덕|천안|남이|하남|목포|당진|새만금|전주|서부산|기장)방향/);
+ return m?m[1]:null;
+}
+
 function chargerCandidateDirectionOK(i,p){const it=items[i],dir=directionWord(it.name),name=String(p.place_name||'').replace(/\s/g,'');if(!it.highwayRestArea)return true;const base=String(it.name).split('휴게소')[0].split(' - ').pop().replace(/\s/g,'');return name.includes(base+'휴게소')&&(!dir||name.includes(dir+'방향')||name.includes('('+dir+')'));}
 function useConfirmedChargerPlace(i,n){const p=chargerLookupCache.get(i)?.[n];if(!p||!chargerCandidateDirectionOK(i,p)||!safePlaceURL(p.place_url))return;const lat=+p.y,lon=+p.x;if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<31.43||lat>44.35||lon<122.37||lon>132)return;
  coords[i]={lat,lon};navCoords[i]={lat,lon};coordQuality[i]='user_kakao';items[i].address=p.road_address_name||p.address_name||items[i].address||'';chargerVerification[i]={level:'user',kakaoName:p.place_name,address:items[i].address,placeUrl:safePlaceURL(p.place_url),lat,lon,checkedAt:new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'})};
@@ -1087,7 +1092,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.18',category:document.getElementById('reportCategory').value,message,platform}),signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.18',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
@@ -1205,4 +1210,5 @@ document.querySelectorAll('.chip').forEach(x=>x.onclick=()=>{document.querySelec
 loadVehicleSettings();render();renderLocationCandidates(null,null);
 if(typeof document.readyState==='string')loadServerCatalog();
 </script>
+<script>if(!location.pathname.includes('nacs-map-test')){const beacon=document.createElement('script');beacon.type='module';beacon.src='https://static.cloudflareinsights.com/beacon.min.js';beacon.setAttribute('data-cf-beacon',JSON.stringify({token:'3699f902c53b430899c1a09f6c70e8e2'}));document.head.appendChild(beacon);}</script>
 </body></html>
