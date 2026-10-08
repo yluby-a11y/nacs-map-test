@@ -19,7 +19,7 @@ test('atomic daily budget remains capped across worker instances and caches bypa
  const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE api_daily_budget(day TEXT,provider TEXT,calls INTEGER,PRIMARY KEY(day,provider));');
  const DB={prepare(sql){return {bind(...args){return {first:async()=>db.prepare(sql).get(...args)}}}}};let upstream=0;
  const workers=Array.from({length:4},()=>createWorker({cacheImpl:null,fetchImpl:async()=>{upstream++;return Response.json({routes:[{result_code:0,summary:{distance:100,duration:10},sections:[]}]});}}));
- const results=await Promise.all(Array.from({length:100},(_,i)=>workers[i%4].fetch(request('/route?origin='+String(126+i/10000)+',35.16&destination=129.33,35.79'),{...env,DB,DAILY_ROUTE_LIMIT:'20'})));
+ const results=await Promise.all(Array.from({length:100},(_,i)=>workers[i%4].fetch(request('/route?origin='+String(126+i/10000)+',35.16&destination=129.33,35.79'),{...env,DB,KAKAO_DIRECTIONS_DAILY_FREE_LIMIT:'20'})));
  assert.equal(results.filter(r=>r.status===200).length,20);assert.equal(results.filter(r=>r.status===429).length,80);assert.equal(upstream,20);assert.equal(db.prepare('SELECT calls FROM api_daily_budget').get().calls,20);db.close();
 });
 

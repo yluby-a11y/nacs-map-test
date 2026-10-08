@@ -14,7 +14,7 @@
       "vars": {
         "DEPLOYMENT_ENV": "staging",
         "ALLOWED_ORIGINS": "https://yluby-a11y.github.io",
-        "DAILY_ROUTE_LIMIT": "10000"
+        "KAKAO_DIRECTIONS_DAILY_FREE_LIMIT": "10000"
       },
       "d1_databases": [
         {

@@ -63,7 +63,9 @@ export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.ca
    const coalesced=pending.has(digest);
    if(!pending.has(digest)){
     const task=(async()=>{if(!(await env.UPSTREAM_LIMITER.limit({key:'kakao-routes'})).success)fail(429,'provider_budget_limited');
-     if(env.DAILY_ROUTE_LIMIT){const limit=Number(env.DAILY_ROUTE_LIMIT);if(!env.DB||!Number.isInteger(limit)||limit<1||limit>1000000)fail(503,'daily_budget_not_configured');
+     // This allowance applies only to uncached Kakao directions requests, never Worker/catalog/report traffic.
+     const dailyDirectionsLimit=env.KAKAO_DIRECTIONS_DAILY_FREE_LIMIT??env.DAILY_ROUTE_LIMIT;
+     if(dailyDirectionsLimit){const limit=Number(dailyDirectionsLimit);if(!env.DB||!Number.isInteger(limit)||limit<1||limit>1000000)fail(503,'daily_budget_not_configured');
       const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
       const reserved=await env.DB.prepare("INSERT INTO api_daily_budget(day,provider,calls) VALUES (?, 'kakao-routes', 1) ON CONFLICT(day,provider) DO UPDATE SET calls=calls+1 WHERE calls<? RETURNING calls").bind(day,limit).first();
       if(!reserved)fail(429,'daily_provider_budget_limited');}
