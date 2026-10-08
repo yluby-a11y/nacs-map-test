@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V45.20</title>
+<title>전국 NACS 충전지도 V45.21</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -46,7 +46,7 @@ a.naver{background:#03c75a;color:#fff}
 <style>.food-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none}.food-heading::-webkit-details-marker{display:none}#foodSummary{white-space:nowrap}#foodSummary:before{content:"▶ ";font-size:12px}#favoritesPanel[open] #foodSummary:before{content:"▼ "}.food-heading .food-tabs{margin:0;gap:4px;flex-wrap:nowrap}.food-heading .food-tabs button{font-size:11px;padding:8px 7px;white-space:nowrap}.map-display{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b}.map-toggle{background:#eef2f7;color:#334155;font-size:12px;padding:8px 12px}.map-toggle.active{background:#0f766e;color:white}.favorite-controls{margin:10px 0}.favorite-controls label{font-size:12px;color:#64748b}@media(max-width:380px){.food-heading{gap:6px}.food-heading .food-tabs button{padding:8px 5px;font-size:10px}}</style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.20</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.21</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -321,12 +321,19 @@ function clearDestinationOnly(){
 }
 
 let myMarker=null,destMarker=null;
+function currentLocationArea(lat,lon){
+ return new Promise(resolve=>{
+  if(typeof kakao==='undefined'||!kakao.maps.services){resolve('');return;}
+  const timer=setTimeout(()=>resolve(''),3000);
+  try{new kakao.maps.services.Geocoder().coord2RegionCode(lon,lat,(data,status)=>{clearTimeout(timer);const area=status===kakao.maps.services.Status.OK?(data.find(x=>x.region_type==='B')||data[0]):null;resolve(area?.address_name||'');});}catch(e){clearTimeout(timer);resolve('');}
+ });
+}
 function getMyPos(center=true){
  return new Promise((resolve,reject)=>{
   if(!navigator.geolocation){reject(new Error('geolocation unsupported'));return}
   const sequence=++originSearchSequence;
-  navigator.geolocation.getCurrentPosition(pos=>{
-   if(sequence!==originSearchSequence){reject(Error('출발지가 변경되었습니다.'));return;}myPos={lat:pos.coords.latitude,lon:pos.coords.longitude,name:'현재 위치'};document.getElementById('origin').value='현재 위치';document.getElementById('originResults').style.display='none';if(center)invalidateRecommendation();
+  navigator.geolocation.getCurrentPosition(async pos=>{
+   if(sequence!==originSearchSequence){reject(Error('출발지가 변경되었습니다.'));return;}const lat=pos.coords.latitude,lon=pos.coords.longitude,area=await currentLocationArea(lat,lon);if(sequence!==originSearchSequence){reject(Error('출발지가 변경되었습니다.'));return;}myPos={lat,lon,name:area?'현재 위치 ('+area+')':'현재 위치',address:area};document.getElementById('origin').value=myPos.name;document.getElementById('originResults').style.display='none';if(center)invalidateRecommendation();
    if(myMarker)map.removeLayer(myMarker);
    myMarker=mapUI.circleMarker([myPos.lat,myPos.lon],{radius:8,weight:3}).addTo(map).bindPopup('내 위치');
    if(center){map.setView([myPos.lat,myPos.lon],13);myMarker.openPopup()}
@@ -989,7 +996,7 @@ function resetTrip(){tripCardFullRange=null;lastCardRoute=null;document.getEleme
  document.getElementById('batteryMode').value='range';for(const id of ['batteryRange','batterySoc','batteryFullRange'])document.getElementById(id).value='';document.getElementById('batteryReserve').value='50';document.getElementById('battery80Range').value='';document.getElementById('preferSupercharger').checked=false;
  loadVehicleSettings();updateBatteryFields();document.getElementById('batteryHelp').textContent='미입력 시 300km · 도착 여유 50km';document.getElementById('routeInfo').textContent='목적지 검색 후에는 주행가능거리를 입력하고, 아래 추천 정렬을 눌러주세요.';document.getElementById('routeInfo').style.display='block';document.getElementById('recommendHint').textContent='';
  document.getElementById('planDeparture').value='';document.getElementById('planChargeStay').value='30';document.getElementById('planFoodStay').value='60';document.getElementById('scheduleOutput').innerHTML='';document.getElementById('scheduleStatus').textContent='현재 코스를 초기화했습니다. 저장한 일정은 유지됩니다.';document.getElementById('status').textContent='출발지와 목적지 또는 방문할 장소를 선택해 주세요.';
- render();renderFavorites();renderWaypoint();
+ render();renderFavorites();renderWaypoint();document.getElementById('chargingPanel').open=false;
 }
 function scheduleSignature(){return JSON.stringify({points:tripPoints(),preferences:tripPreferences,cardFullRange:tripCardFullRange});}
 function buildSchedule(points,legs,startMs,stays){
@@ -1034,7 +1041,7 @@ function travelCardCanvas(p){
 }
 async function downloadSchedule(){const p=freshSchedule();if(!p)return;try{if(document.fonts?.ready)await document.fonts.ready;const canvas=travelCardCanvas(p),file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!file)throw Error('이미지 생성 실패');const url=URL.createObjectURL(file),a=document.createElement('a');a.href=url;a.download='여행카드-'+new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'})+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.getElementById('scheduleStatus').textContent='여행 카드 사진(PNG) 다운로드를 요청했습니다.';}catch(e){document.getElementById('scheduleStatus').textContent='사진을 저장하지 못했습니다. 여행 카드 공유를 이용해 주세요.';}}
 async function shareSchedule(){const p=freshSchedule();if(!p)return;const text=scheduleText(p),status=document.getElementById('scheduleStatus');
- if(navigator.share){try{await navigator.share({title:'여행 카드',text});status.textContent='공유 메뉴를 닫았습니다. 공유한 앱에서 일정표를 확인하세요.';}catch(e){status.textContent=e.name==='AbortError'?'공유를 취소했습니다.':'공유 메뉴를 열지 못했습니다. 아래 내용을 복사해 공유하세요.';if(e.name!=='AbortError')showShareText(text);}return;}
+ if(navigator.share){try{await navigator.share({text});status.textContent='공유 메뉴를 닫았습니다. 공유한 앱에서 일정표를 확인하세요.';}catch(e){status.textContent=e.name==='AbortError'?'공유를 취소했습니다.':'공유 메뉴를 열지 못했습니다. 아래 내용을 복사해 공유하세요.';if(e.name!=='AbortError')showShareText(text);}return;}
  showShareText(text);status.textContent='공유 메뉴를 지원하지 않는 브라우저입니다. 아래 일정표를 복사해 공유하세요.';
 }
 function showShareText(text){const box=document.getElementById('scheduleOutput');showSchedule(currentSchedule);const area=document.createElement('textarea');area.value=text;area.readOnly=true;area.setAttribute('aria-label','공유할 일정표');area.style.width='100%';area.rows=10;box.appendChild(area);}
