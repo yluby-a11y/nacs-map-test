@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.2</title>
+<title>전국 NACS 충전지도 V2.3</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -48,7 +48,7 @@ a.naver{background:#03c75a;color:#fff}
 .route-field{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:8px}.trip-input .route-field>label{margin:0;white-space:nowrap}.route-field .trip-input-row{min-width:0}.route-field #originResults,.route-field #destResults{grid-column:1/-1}@media(max-width:380px){.route-field .trip-input-row{grid-template-columns:minmax(0,1fr) 48px;gap:6px}.route-field .trip-input-row input{padding:10px 8px;font-size:13px}}
 </style></head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.2</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.3</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -284,12 +284,12 @@ function chooseOrigin(i){
  const r=originCandidates[i];if(!r)return;originSearchSequence++;myPos={lat:r.lat,lon:r.lon,name:r.name,address:r.address||r.display?.split(' · ').slice(1).join(' · ')||''};
  if(myMarker)map.removeLayer(myMarker);myMarker=mapUI.marker([r.lat,r.lon]).addTo(map).bindPopup('출발지: '+escapeHTML(r.name));
  document.getElementById('origin').value=r.name;document.getElementById('originResults').style.display='none';
- invalidateRecommendation();updateCourseRoute();renderWaypoint();document.getElementById('status').textContent='출발지 선택 완료: '+r.name;
+ invalidateRecommendation();updateCourseRoute();renderWaypoint();renderFavorites();document.getElementById('status').textContent='출발지 선택 완료: '+r.name;
 }
 function clearOrigin(){
  originSearchSequence++;myPos=null;if(myMarker){map.removeLayer(myMarker);myMarker=null;}
  document.getElementById('origin').value='';document.getElementById('originResults').style.display='none';
- invalidateRecommendation();updateCourseRoute();renderWaypoint();
+ invalidateRecommendation();updateCourseRoute();renderWaypoint();renderFavorites();
 }
 let routeStops=[];
 function selectedTripStops(){return routeStops.length?routeStops:[...(selectedNearbyCharger?[{...selectedNearbyCharger,kind:'charger'}]:[]),...(selectedWaypoint?[{...selectedWaypoint,kind:'food'}]:[])];}
@@ -339,7 +339,7 @@ function getMyPos(center=true){
    if(myMarker)map.removeLayer(myMarker);
    myMarker=mapUI.circleMarker([myPos.lat,myPos.lon],{radius:8,weight:3}).addTo(map).bindPopup('내 위치');
    if(center){map.setView([myPos.lat,myPos.lon],13);myMarker.openPopup()}
-   updateCourseRoute();render();renderWaypoint();resolve(myPos);
+   updateCourseRoute();render();renderWaypoint();renderFavorites();resolve(myPos);
   },reject,{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
  });
 }
@@ -749,6 +749,7 @@ function foodMatches(query,radius){
 }
 function syncMapPlaceButtons(){for(const [id,on] of [['chargerMapToggle',showChargerMarkers],['foodMapToggle',document.getElementById('showFavorites').checked]]){const b=document.getElementById(id);b.classList.toggle('active',!!on);b.setAttribute('aria-pressed',String(!!on));}}
 function toggleMapPlaces(kind){if(kind==='charger'){showChargerMarkers=!showChargerMarkers;if(recommendMode&&lastRecommendedResults.length)renderRecommended(lastRecommendedResults);else render();}else{document.getElementById('showFavorites').checked=!document.getElementById('showFavorites').checked;renderFavorites();}syncMapPlaceButtons();}
+function favoriteOriginDistance(f){if(!myPos||![myPos.lat,myPos.lon,f.lat,f.lon].every(Number.isFinite))return '';const km=hav(myPos,f);return (originName().startsWith('현재 위치')?'현재 위치':'출발지')+'에서 직선 '+km.toFixed(1)+'km';}
 function renderFavorites(){
  syncMapPlaceButtons();
  const list=document.getElementById('favoriteList');list.innerHTML='';favoriteMarkers.clearLayers();const query=document.getElementById('favoriteSearch').value.trim().toLowerCase(),radius=Number(document.getElementById('favoriteRadius').value)||5;
@@ -760,7 +761,7 @@ function renderFavorites(){
  if(document.getElementById('showFavorites').checked)favorites.forEach((f,i)=>{if(Number.isFinite(f.lat)&&Number.isFinite(f.lon))mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(favoriteMarkers).bindPopup('<b>'+escapeHTML(f.name)+'</b><div class="actions">'+favoriteActions(f,i)+'</div>');});
  visible.forEach(({f,i,distance})=>{const card=document.createElement('div');card.className='card favorite-card'+(selectedWaypoint&&selectedWaypoint.name===f.name?' selected':'');card.dataset.favoriteId=f.id;if(f.lat){card.dataset.lat=f.lat;card.dataset.lon=f.lon;card.dataset.coordSource=f.coordSource;}
  const distanceLabel=Number.isFinite(distance)?(foodScope==='route'?'경로에서 ':'')+distance.toFixed(1)+'km':'';
- card.innerHTML='<div class="row"><div class="name">'+escapeHTML(f.name)+'</div><span class="op">'+distanceLabel+'</span></div><div class="meta">'+escapeHTML(f.locationAddress||f.address)+'<br>'+favoriteBrief(f)+'</div><div class="actions">'+favoriteActions(f,i)+'</div>';list.appendChild(card);
+ card.innerHTML='<div class="row"><div class="name">'+escapeHTML(f.name)+'</div><span class="op">'+distanceLabel+'</span></div><div class="meta">'+escapeHTML(f.locationAddress||f.address)+'<br>'+favoriteBrief(f)+(favoriteOriginDistance(f)?'<br>'+favoriteOriginDistance(f):'')+'</div><div class="actions">'+favoriteActions(f,i)+'</div>';list.appendChild(card);
 
  });
  if(!visible.length){const empty=document.createElement('p');empty.className='meta';empty.textContent=foodScope==='route'&&!courseLine?context:'이 범위에 등록된 맛집이 없습니다. 범위를 넓히거나 다른 위치를 선택해 보세요.';list.appendChild(empty);}
