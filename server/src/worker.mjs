@@ -78,7 +78,7 @@ export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.ca
    if(!env.DB)fail(503,'database_not_configured');const kind=url.pathname==='/v1/chargers'?'charger':'restaurant';
    const q=url.searchParams.get('q')||'',cursor=url.searchParams.get('cursor')||'',limit=Number(url.searchParams.get('limit')||100);
    if(q.length>80||cursor.length>80||!Number.isInteger(limit)||limit<1||limit>200)fail(400,'invalid_query');
-   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([url.pathname,q,cursor,limit]))),cacheKey=new Request(url.origin+'/internal-cache/catalog-v29/'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join(''));
+   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([url.pathname,q,cursor,limit]))),cacheKey=new Request(url.origin+'/internal-cache/catalog-v214/'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join(''));
    const hit=await cacheImpl?.match(cacheKey);if(hit){const response=reply(await hit.json());response.headers.set('X-Catalog-Cache','HIT');return response;}
    const key=cacheKey.url,coalesced=catalogPending.has(key);
    if(!coalesced){const task=(async()=>{let data;
