@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.3</title>
+<title>전국 NACS 충전지도 V2.4</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -48,7 +48,7 @@ a.naver{background:#03c75a;color:#fff}
 .route-field{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:8px}.trip-input .route-field>label{margin:0;white-space:nowrap}.route-field .trip-input-row{min-width:0}.route-field #originResults,.route-field #destResults{grid-column:1/-1}@media(max-width:380px){.route-field .trip-input-row{grid-template-columns:minmax(0,1fr) 48px;gap:6px}.route-field .trip-input-row input{padding:10px 8px;font-size:13px}}
 </style></head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.3</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.4</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -542,9 +542,11 @@ function rankKey(x){
 }
 
 
+function showChargingRecommendations(scroll=false){const panel=document.getElementById('chargingPanel');panel.open=true;document.getElementById('favoritesPanel').open=false;if(scroll&&panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth',block:'start'});}
 async function recommendSort(){
  if(!applyTripPreferences())return;if(dest&&document.getElementById('destination').value.trim()!==dest.name){document.getElementById('routeInfo').textContent='변경한 목적지를 검색해 선택한 뒤 추천해 주세요.';return;}
 
+  const revision=recommendationRevision;showChargingRecommendations();
   const btn=document.getElementById("recommendBtn");
   const hint=document.getElementById("recommendHint");
   if(btn){
@@ -561,7 +563,7 @@ async function recommendSort(){
     if(hint) hint.textContent="경로상 휴게소를 찾고 가까운 순으로 정렬하고 있습니다…";
   },900);
   try{
-    return await recommendSortCore();
+    const result=await recommendSortCore();if(revision===recommendationRevision&&recommendMode)showChargingRecommendations(true);return result;
   }finally{
     clearTimeout(progressTimer);
     if(btn){
