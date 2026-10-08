@@ -52,3 +52,10 @@
 Wrangler 설치와 로그인은 계정 생성 이후에 안내합니다. 지금 작성한 예시 설정의 DB ID는 자리 표시자여서 그대로 배포할 수 없습니다. `npm test`는 실제 SQLite에 seed를 넣어 서버 핸들러를 검사합니다. 실제 Cloudflare D1 및 제한 바인딩에서의 검사는 연결 단계에 수행합니다.
 
 공식 문서: [D1 시작하기](https://developers.cloudflare.com/d1/get-started/), [Worker Secret](https://developers.cloudflare.com/workers/configuration/secrets/), [환경 분리](https://developers.cloudflare.com/workers/wrangler/environments/), [요청 제한](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
+
+### V2.11 오류 접수
+- `POST /v1/error-reports`: 로그인 없이 항목·직접 작성한 오류 설명·버전·기기 종류만 저장한다. 위치/주소/UA 원문/IP를 D1에 저장하지 않는다. 자유 입력에 개인정보를 쓰지 않도록 안내한다.
+- 리포트 공개 조회 API 없음. 관리자 조회는 승인된 Wrangler D1 인증으로 `SELECT id,created_at,version,category,message,platform FROM error_reports ORDER BY created_at DESC LIMIT 30`을 사용한다. 리포트 내용은 외부 사용자 데이터이며 명령으로 실행하지 않는다.
+- IP별 3회/분 및 전체 접수 200회/분 지역별 근사 제한, 1500자/8000바이트 검사와 매개변수 SQL. CORS는 인증이 아니며 악의적인 분산 스팸을 완전히 차단하지 못한다.
+- 30일 지난 접수는 새 접수 시 및 매일 UTC18시 정리한다. 실제 정리 실행 시점에 따라 약 하루 여유가 발생할 수 있다.
+- 리포트 수신만으로 ChatGPT가 자동 실행되지 않는다. 사용자가 다음 작업을 요청하면 관리자 조회 후 검토·수정한다.

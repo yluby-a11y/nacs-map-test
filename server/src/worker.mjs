@@ -97,4 +97,4 @@ export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.ca
   fail(404,'not_found');
  }catch(e){return reply({error:e instanceof ApiError?e.code:'internal_error'},e instanceof ApiError?e.status:500);}
 }};}
-export default createWorker();
+export default {...createWorker(),async scheduled(event,env){if(env.DB)await env.DB.prepare('DELETE FROM error_reports WHERE created_at < ?').bind(new Date(Date.now()-30*86400000).toISOString()).run();}};

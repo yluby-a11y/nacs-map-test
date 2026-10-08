@@ -48,7 +48,12 @@
             "limit": 3
           }
         }
-      ]
+      ],
+      "triggers": {
+        "crons": [
+          "0 18 * * *"
+        ]
+      }
     },
     "production": {
       "name": "nacs-map-api-prod",
