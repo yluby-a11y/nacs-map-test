@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V45.22</title>
+<title>전국 NACS 충전지도 V45.23</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -46,7 +46,7 @@ a.naver{background:#03c75a;color:#fff}
 <style>.food-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none}.food-heading::-webkit-details-marker{display:none}#foodSummary{white-space:nowrap}#foodSummary:before{content:"▶ ";font-size:12px}#favoritesPanel[open] #foodSummary:before{content:"▼ "}.food-heading .food-tabs{margin:0;gap:4px;flex-wrap:nowrap}.food-heading .food-tabs button{font-size:11px;padding:8px 7px;white-space:nowrap}.map-display{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b}.map-toggle{background:#eef2f7;color:#334155;font-size:12px;padding:8px 12px}.map-toggle.active{background:#0f766e;color:white}.favorite-controls{margin:10px 0}.favorite-controls label{font-size:12px;color:#64748b}@media(max-width:380px){.food-heading{gap:6px}.food-heading .food-tabs button{padding:8px 5px;font-size:10px}}</style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.22</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.23</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -674,7 +674,7 @@ async function lookupChargerPlaces(i){if(chargerLookupCache.has(i))return charge
 async function checkChargerLocation(i){
  if(!Number.isInteger(i)||!items[i])return;const rev=++chargerCheckRevision,box=document.getElementById('chargerCheck'),it=items[i],v=chargerVerification[i];document.getElementById('chargingPanel').open=true;box.hidden=false;
  const heading='<h3>'+escapeHTML(it.name)+'</h3><p class="meta">등록 주소: '+escapeHTML(it.address||'주소 없음')+'<br>'+chargerCheckLabel(i)+'</p>';
- const folderProof=superchargerFolderProof[i],folderEvidence=it.operator==='TESLA'?'<p class="meta">'+(folderProof?.folderName?'공유 목록: '+escapeHTML(folderProof.folderName)+'<br>공유 주소: '+escapeHTML(folderProof.folderAddress||'미기재')+'<br>'+escapeHTML(folderProof.note)+'<br>':'')+'<a target="_blank" rel="noopener" href="https://map.kakao.com/?target=other&amp;folderid=5331660">공유 수퍼차저 목록 확인</a></p>':'';
+ const folderProof=superchargerFolderProof[i],folderEvidence=it.operator==='TESLA'?'<p class="meta">'+(folderProof?.folderName?'공유 목록: '+escapeHTML(folderProof.folderName)+'<br>공유 주소: '+escapeHTML(folderProof.folderAddress||'미기재')+'<br>'+escapeHTML(folderProof.note)+'<br>':'')+'<a target="_blank" rel="noopener" href="'+chargerMapSearchURL(i)+'">카카오맵에서 해당 위치 확인</a></p>':'';
  const evidence=folderEvidence+(v&&v.level!=='pending'?'<p class="meta">대조일: '+escapeHTML(v.checkedAt)+' · 카카오 '+escapeHTML(v.kakaoName||'주소 검색')+'<br>카카오 주소: '+escapeHTML(v.address)+'<br>'+escapeHTML(v.level==='charger'?'충전소 장소와 등록 주소를 대조했습니다. 충전기 운영·NACS 이용 가능 여부는 별도 확인하세요.':v.level==='site'?'시설의 장소와 등록 주소를 대조했습니다. 시설 내 충전기와 진입 위치는 확인하세요.':'등록 주소의 위치를 대조했습니다. 건물·필지 위치이며 충전기와 출입구를 확정한 것은 아닙니다.')+'</p>':'');
  box.innerHTML=heading+evidence+(v?.level==='pending'?'<p class="meta">'+escapeHTML(v.reason)+' · 표시 좌표는 미확인입니다. 대조한 주소: '+escapeHTML(v.address||'없음')+'</p>':'')+'<p>카카오 장소를 확인하고 있습니다…</p>';if(box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});
  try{const places=await lookupChargerPlaces(i);if(rev!==chargerCheckRevision)return;
