@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V45.23</title>
+<title>전국 NACS 충전지도 V45.24</title>
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -46,7 +46,7 @@ a.naver{background:#03c75a;color:#fff}
 <style>.food-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none}.food-heading::-webkit-details-marker{display:none}#foodSummary{white-space:nowrap}#foodSummary:before{content:"▶ ";font-size:12px}#favoritesPanel[open] #foodSummary:before{content:"▼ "}.food-heading .food-tabs{margin:0;gap:4px;flex-wrap:nowrap}.food-heading .food-tabs button{font-size:11px;padding:8px 7px;white-space:nowrap}.map-display{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b}.map-toggle{background:#eef2f7;color:#334155;font-size:12px;padding:8px 12px}.map-toggle.active{background:#0f766e;color:white}.favorite-controls{margin:10px 0}.favorite-controls label{font-size:12px;color:#64748b}@media(max-width:380px){.food-heading{gap:6px}.food-heading .food-tabs button{padding:8px 5px;font-size:10px}}</style>
 </head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.23</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V45.24</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -966,7 +966,7 @@ function buildTravelCard(roadRoute,points){
  lastCardRoute=roadRoute;currentSchedule=card;showSchedule(card);try{const saved=savedSchedules();if(!saved[0]||saved[0].signature!==card.signature){saved.unshift({...card,id:Date.now().toString(36)});localStorage.setItem(SCHEDULE_STORAGE_KEY,JSON.stringify(saved.slice(0,10)));}}catch(e){}document.getElementById('scheduleStatus').textContent='';if(card.chargeTargets.some(c=>c.extraStop)&&stops.filter(x=>x.kind==='charger').length===1)suggestSecondCharger(card,roadRoute).catch(()=>{});return card;
 }
 function travelDurationText(minutes){const n=Math.max(0,Math.round(minutes));return (n>=60?Math.floor(n/60)+'시간 ':'')+(n%60)+'분';}
-function travelPlaceText(p,x,i){return x.name+(i&&Number.isFinite(p.placeDistancesKm?.[i])?' ('+Math.round(p.placeDistancesKm[i])+'km)':'');}
+function travelPlaceText(p,x,i){const start=p.placeDistancesKm?.[i-1],end=p.placeDistancesKm?.[i],distance=end-start;return x.name+(i&&Number.isFinite(start)&&Number.isFinite(end)&&distance>=0?' ('+Math.round(distance)+'km)':'');}
 function travelCardHeading(p){const date=new Date(p.createdAt);if(!Number.isFinite(date.getTime()))return '여행 카드';const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date),read=type=>parts.find(x=>x.type===type)?.value||'';return '여행 카드 - '+read('year')+read('month')+read('day')+' '+read('hour')+':'+read('minute');}
 function travelCardHTML(p){return '<div class="card" style="border:1px solid #dbe3ec"><h3>총 '+Math.round(p.distanceKm)+'km · 예상 이동 '+travelDurationText(p.travelMinutes)+'</h3><p>'+p.places.map((x,i)=>escapeHTML(travelPlaceText(p,x,i))).join(' → ')+'</p>'+'<div id="extraChargeAdvice" aria-live="polite"></div></div>';}
 let extraChargeRevision=0;
