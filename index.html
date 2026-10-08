@@ -834,8 +834,8 @@ async function shareTeslaPlace(addressOnly=false){
  catch(e){if(e.name==='AbortError')help.textContent='공유를 취소했습니다.';else teslaShareFallback(place,'공유 메뉴를 열지 못했습니다. 지도 앱에서 장소를 열고 공유 → Tesla를 선택해 주세요.');}
 }
 let lastTeslaConfirmation=null;
-function confirmTeslaAddress(){const place=teslaSharePlace();if(place)showTeslaConfirmation(place);}
-function showTeslaConfirmation(place,scroll=true){lastTeslaConfirmation=place;const box=document.getElementById('teslaConfirm');box.hidden=false;box.innerHTML='<h3>차량 내비게이션 주소 확인</h3><p><b>'+escapeHTML(place.title)+'</b></p><p style="font-size:18px;font-weight:700">'+escapeHTML(place.address||'주소 정보를 확인하지 못했습니다. Tesla 앱에서 장소명과 위치를 확인해 주세요.')+'</p><button onclick="shareTeslaPlace(true)"'+(!place.address?' disabled':'')+'>주소만 공유</button>';if(scroll&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});}
+function confirmTeslaAddress(){return shareTeslaPlace(true);}
+function showTeslaConfirmation(place,scroll=true){lastTeslaConfirmation=place;const box=document.getElementById('teslaConfirm');box.hidden=false;box.innerHTML='<h3>차량 내비게이션 주소 확인</h3><p><b>'+escapeHTML(place.title)+'</b></p><p style="font-size:18px;font-weight:700">'+escapeHTML(place.address||'주소 정보를 확인하지 못했습니다. Tesla 앱에서 장소명과 위치를 확인해 주세요.')+'</p>';if(scroll&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'center'});}
 function teslaShareFallback(place,message){const help=document.getElementById('teslaShareStatus');help.textContent=message;const a=document.createElement('a');a.href=place.url;a.target='_blank';a.rel='noopener';a.textContent='장소 공유 대안';help.appendChild(a);}
 let teslaChosenPointKey='';
 function updateTeslaPlace(){const p=teslaSharePlace();if(p)teslaChosenPointKey=p.url;lastTeslaConfirmation=null;document.getElementById('teslaConfirm').hidden=true;}
