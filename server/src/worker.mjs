@@ -38,6 +38,18 @@ export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.ca
   const ip=request.headers.get('CF-Connecting-IP');if(!ip)fail(503,'edge_identity_unavailable');
   const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip));const key=Array.from(new Uint8Array(hash),v=>v.toString(16).padStart(2,'0')).join('');
   if(!(await env.API_LIMITER.limit({key})).success)fail(429,'rate_limited');
+  if(url.pathname==='/v1/error-reports'&&request.method==='POST'){
+   if(!origin||!allowed.includes(origin))fail(403,'origin_required');
+   if(!env.DB||!env.REPORT_LIMITER)fail(503,'reports_not_configured');
+   if(!(await env.REPORT_LIMITER.limit({key})).success)fail(429,'report_rate_limited');
+   const body=await readJson(request,8000);
+   if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!['version','category','message','platform'].includes(k))||!/^V\d+\.\d+$/.test(body.version||'')||!['search','route','charger','food','card','return','other'].includes(body.category)||!['Android','iOS','PC','other'].includes(body.platform)||typeof body.message!=='string'||body.message.trim().length<5||body.message.length>1500)fail(400,'invalid_report');
+   if(!(await env.UPSTREAM_LIMITER.limit({key:'report-writes'})).success)fail(429,'report_budget_limited');
+   const id=crypto.randomUUID(),created=new Date().toISOString();
+   await env.DB.prepare('DELETE FROM error_reports WHERE created_at < ?').bind(new Date(Date.now()-30*86400000).toISOString()).run();
+   await env.DB.prepare('INSERT INTO error_reports (id,created_at,version,category,message,platform) VALUES (?,?,?,?,?,?)').bind(id,created,body.version,body.category,body.message.trim(),body.platform).run();
+   return reply({id,createdAt:created},201);
+  }
   if(url.pathname==='/route'&&request.method==='GET'){
    const point=s=>typeof s==='string'&&/^\d+(?:\.\d+)?,\d+(?:\.\d+)?$/.test(s)&&(()=>{const [x,y]=s.split(',').map(Number);return x>=124&&x<=132&&y>=33&&y<=39;})();
    const start=url.searchParams.get('origin'),end=url.searchParams.get('destination'),priority=url.searchParams.get('priority')||'RECOMMEND',vias=url.searchParams.get('waypoints');

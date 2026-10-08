@@ -39,6 +39,14 @@
             "limit": 200,
             "period": 60
           }
+        },
+        {
+          "name": "REPORT_LIMITER",
+          "namespace_id": "458703",
+          "simple": {
+            "period": 60,
+            "limit": 3
+          }
         }
       ]
     },
