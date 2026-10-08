@@ -1109,7 +1109,7 @@ function travelChargeLines(p){
  const from=p.placeDistancesKm?.[last.index],total=p.placeDistancesKm?.at(-1);
  if(!Number.isFinite(from)||!Number.isFinite(total)||total<from)return [];
  const remaining=Math.floor(range80-(total-from));
- return [last.name+'에서 80% 충전 → 목적지 도착 시 잔여 주행가능거리 약 '+remaining+'km'+(remaining<50?' · 도착 여유 50km 미달, 추가 충전 필요':'')];
+ return [last.name+' · 80% 충전','목적지 도착 시 잔여 주행가능거리 약 '+remaining+'km'+(remaining<50?' · 도착 여유 50km 미달, 추가 충전 필요':'')];
 }
 function travelCardHTML(p){return '<div class="card" style="border:1px solid #dbe3ec"><h3>총 '+Math.round(p.distanceKm)+'km · 예상 이동 '+travelDurationText(p.travelMinutes)+'</h3><p>'+p.places.map((x,i)=>escapeHTML(travelPlaceText(p,x,i))).join(' → ')+'</p>'+travelChargeLines(p).map(line=>'<p>'+escapeHTML(line)+'</p>').join('')+'<div id="extraChargeAdvice" aria-live="polite"></div></div>';}
 let extraChargeRevision=0;
