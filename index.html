@@ -228,7 +228,7 @@ function routeDistanceKm(p){if(!route)return 99999;let d=99999;for(let i=1;i<rou
 function render(){
  syncResultSortControls();
  const q=document.getElementById('search').value.trim().toLowerCase(),list=document.getElementById('list');list.innerHTML='';markers.clearLayers();let arr=[];
- items.forEach((it,i)=>{if(selectedOp!=='ALL'&&it.operator!==selectedOp)return;if(q&&!((it.name+' '+it.operator).toLowerCase().includes(q)))return;const c=coords[i];let detour=null,progress=null;if(c&&route){detour=routeDistanceKm(c);progress=routeProgressKm(c)}arr.push({it,i,c,detour,progress});});
+ items.forEach((it,i)=>{if(!chargerMatchesScope(it))return;if(selectedOp!=='ALL'&&it.operator!==selectedOp)return;if(q&&!((it.name+' '+it.operator).toLowerCase().includes(q)))return;const c=coords[i];let detour=null,progress=null;if(c&&route){detour=routeDistanceKm(c);progress=routeProgressKm(c)}arr.push({it,i,c,detour,progress});});
  if(recommendMode&&route){
    arr=arr.filter(x=>x.c&&x.detour<=15);
    arr.sort((a,b)=>{
