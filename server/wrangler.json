@@ -13,7 +13,8 @@
       "workers_dev": true,
       "vars": {
         "DEPLOYMENT_ENV": "staging",
-        "ALLOWED_ORIGINS": "https://yluby-a11y.github.io"
+        "ALLOWED_ORIGINS": "https://yluby-a11y.github.io",
+        "DAILY_ROUTE_LIMIT": "10000"
       },
       "d1_databases": [
         {

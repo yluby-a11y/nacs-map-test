@@ -23,7 +23,7 @@ async function limitedUpstream(fetchImpl,url,options={},max=2_000_000){
  }catch(e){if(e instanceof ApiError)throw e;fail(502,'provider_unavailable');}finally{clearTimeout(timer);}
 }
 function validPlace(p){return p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&p.lat>=31.43&&p.lat<=44.35&&p.lon>=122.37&&p.lon<=132;}
-export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.caches?.default}={}){const pending=new Map();return {async fetch(request,env,ctx){
+export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.caches?.default}={}){const pending=new Map(),catalogPending=new Map();return {async fetch(request,env,ctx){
  const origin=request.headers.get('Origin'),allowed=(env.ALLOWED_ORIGINS||'').split(',').map(x=>x.trim()).filter(Boolean);
  const headers={...jsonHeaders,Vary:'Origin'};
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
@@ -52,31 +52,42 @@ export function createWorker({fetchImpl=globalThis.fetch,cacheImpl=globalThis.ca
   }
   if(url.pathname==='/route'&&request.method==='GET'){
    const point=s=>typeof s==='string'&&/^\d+(?:\.\d+)?,\d+(?:\.\d+)?$/.test(s)&&(()=>{const [x,y]=s.split(',').map(Number);return x>=124&&x<=132&&y>=33&&y<=39;})();
-   const start=url.searchParams.get('origin'),end=url.searchParams.get('destination'),priority=url.searchParams.get('priority')||'RECOMMEND',vias=url.searchParams.get('waypoints');
+   const start=url.searchParams.get('origin'),end=url.searchParams.get('destination'),priority=url.searchParams.get('priority')||'RECOMMEND',vias=url.searchParams.get('waypoints'),geometry=url.searchParams.get('geometry');
+   if(geometry!==null&&!['0','1'].includes(geometry))fail(400,'invalid_geometry');
+   const routeReply=data=>reply(geometry==='0'?{...data,route:{result_code:data.route.result_code,summary:{distance:data.route.summary.distance,duration:data.route.summary.duration},sections:(data.route.sections||[]).map(s=>({distance:s.distance,duration:s.duration}))}}:data);
    if(!point(start)||!point(end)||!['RECOMMEND','TIME','DISTANCE'].includes(priority)||(vias!==null&&(!vias||vias.split('|').length>5||!vias.split('|').every(point))))fail(400,'invalid_route_parameters');
    if(!env.KAKAO_REST_API_KEY)fail(503,'route_not_configured');
    const normalized=JSON.stringify([start,end,priority,vias||'']);const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(normalized));
    const digest=Array.from(new Uint8Array(bytes),v=>v.toString(16).padStart(2,'0')).join('');const cacheKey=new Request(url.origin+'/internal-cache/kakao-v1/'+digest);
-   const hit=await cacheImpl?.match(cacheKey);if(hit){const response=reply(await hit.json());response.headers.set('X-Route-Cache','HIT');return response;}
+   const hit=await cacheImpl?.match(cacheKey);if(hit){const response=routeReply(await hit.json());response.headers.set('X-Route-Cache','HIT');return response;}
    const coalesced=pending.has(digest);
    if(!pending.has(digest)){
     const task=(async()=>{if(!(await env.UPSTREAM_LIMITER.limit({key:'kakao-routes'})).success)fail(429,'provider_budget_limited');
+     if(env.DAILY_ROUTE_LIMIT){const limit=Number(env.DAILY_ROUTE_LIMIT);if(!env.DB||!Number.isInteger(limit)||limit<1||limit>1000000)fail(503,'daily_budget_not_configured');
+      const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      const reserved=await env.DB.prepare("INSERT INTO api_daily_budget(day,provider,calls) VALUES (?, 'kakao-routes', 1) ON CONFLICT(day,provider) DO UPDATE SET calls=calls+1 WHERE calls<? RETURNING calls").bind(day,limit).first();
+      if(!reserved)fail(429,'daily_provider_budget_limited');}
      const target=new URL('https://apis-navi.kakaomobility.com/v1/directions');target.searchParams.set('origin',start);target.searchParams.set('destination',end);target.searchParams.set('priority',priority);target.searchParams.set('summary','false');target.searchParams.set('alternatives','false');if(vias)target.searchParams.set('waypoints',vias);
      const data=await limitedUpstream(fetchImpl,target.toString(),{headers:{Authorization:'KakaoAK '+env.KAKAO_REST_API_KEY}},8_000_000);const route=data.routes?.find(x=>x.result_code===0);if(!route)fail(422,'no_route');
      const result={provider:'kakao',priority,route};if(cacheImpl){const put=cacheImpl.put(cacheKey,Response.json(result,{headers:{'Cache-Control':'public, max-age=180'}}));if(ctx?.waitUntil)ctx.waitUntil(put);else await put;}return result;
     })();pending.set(digest,task);task.finally(()=>pending.delete(digest)).catch(()=>{});
    }
-   const response=reply(await pending.get(digest));response.headers.set('X-Route-Cache',coalesced?'COALESCED':'MISS');return response;
+   const response=routeReply(await pending.get(digest));response.headers.set('X-Route-Cache',coalesced?'COALESCED':'MISS');return response;
   }
-  if(url.pathname==='/v1/catalog'&&request.method==='GET'){
-   if(!env.DB)fail(503,'database_not_configured');const row=await env.DB.prepare('SELECT version,chargers,restaurants FROM catalog_versions WHERE id=1').first();if(!row)fail(503,'catalog_not_imported');return reply(row);
-  }
-  if(['/v1/chargers','/v1/restaurants'].includes(url.pathname)&&request.method==='GET'){
+  if(['/v1/catalog','/v1/chargers','/v1/restaurants'].includes(url.pathname)&&request.method==='GET'){
    if(!env.DB)fail(503,'database_not_configured');const kind=url.pathname==='/v1/chargers'?'charger':'restaurant';
    const q=url.searchParams.get('q')||'',cursor=url.searchParams.get('cursor')||'',limit=Number(url.searchParams.get('limit')||100);
    if(q.length>80||cursor.length>80||!Number.isInteger(limit)||limit<1||limit>200)fail(400,'invalid_query');
-   const escaped=q.replace(/[\\%_]/g,'\\$&');const result=await env.DB.prepare("SELECT id,payload FROM places WHERE kind=? AND id>? AND (name LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\') ORDER BY id LIMIT ?").bind(kind,cursor,'%'+escaped+'%','%'+escaped+'%',limit+1).all();
-   const more=result.results.length>limit,rows=result.results.slice(0,limit);return reply({version:1,places:rows.map(x=>JSON.parse(x.payload)),nextCursor:more?rows.at(-1).id:null});
+   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([url.pathname,q,cursor,limit]))),cacheKey=new Request(url.origin+'/internal-cache/catalog-v29/'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join(''));
+   const hit=await cacheImpl?.match(cacheKey);if(hit){const response=reply(await hit.json());response.headers.set('X-Catalog-Cache','HIT');return response;}
+   const key=cacheKey.url,coalesced=catalogPending.has(key);
+   if(!coalesced){const task=(async()=>{let data;
+    if(url.pathname==='/v1/catalog'){data=await env.DB.prepare('SELECT version,chargers,restaurants FROM catalog_versions WHERE id=1').first();if(!data)fail(503,'catalog_not_imported');}
+    else{const escaped=q.replace(/[\\%_]/g,'\\$&');if(new TextEncoder().encode('%'+escaped+'%').length>50)fail(400,'query_too_long');
+     const result=await env.DB.prepare("SELECT id,payload FROM places WHERE kind=? AND id>? AND (name LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\') ORDER BY id LIMIT ?").bind(kind,cursor,'%'+escaped+'%','%'+escaped+'%',limit+1).all();const more=result.results.length>limit,rows=result.results.slice(0,limit);data={version:1,places:rows.map(x=>JSON.parse(x.payload)),nextCursor:more?rows.at(-1).id:null};}
+    if(cacheImpl){const put=cacheImpl.put(cacheKey,Response.json(data,{headers:{'Cache-Control':'public, max-age=300'}}));if(ctx?.waitUntil)ctx.waitUntil(put);else await put;}return data;
+   })();catalogPending.set(key,task);task.finally(()=>catalogPending.delete(key)).catch(()=>{});}
+   const response=reply(await catalogPending.get(key));response.headers.set('X-Catalog-Cache',coalesced?'COALESCED':'MISS');return response;
   }
   if(url.pathname==='/v1/routes'&&request.method==='POST'){
    const {points,overview}=validateRoute(await readJson(request));if(!(await env.UPSTREAM_LIMITER.limit({key:'routes'})).success)fail(429,'provider_budget_limited');
