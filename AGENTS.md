@@ -32,3 +32,6 @@
 
 PC Git Credential Manager의 yluby-a11y 인증으로 Git을 사용한다. 토큰과 비밀번호를 파일이나 대화에 남기지 않는다. 연결 앱의 push 권한 표시만으로 쓰기 성공을 판단하지 않는다. 새 환경에서는 인증과 원격 주소를 확인한다. 이 PC Git의 HTTPS helper는 다음 경로에 있다:
 `C:/Users/SAMSUNG/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/git/mingw64/bin`
+
+## 버전 규칙 (2026-10-08 사용자 지시)
+현재 버전은 V2이다. 이후 새 버전은 0.1씩 증가한다(V2.1, V2.2 등). 사용자가 크게 올리라고 명시적으로 요청할 때만 정수 버전을 1 올린다(V3 등). 버전 변경은 제목/화면과 배포 기록에 일관되게 적용한다.
