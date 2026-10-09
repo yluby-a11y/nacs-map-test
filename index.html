@@ -922,14 +922,16 @@ function naverRoutePoints(points){
  const intent=scheme.replace('nmap://','intent://')+'#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;S.browser_fallback_url='+encodeURIComponent(store)+';end';
  return {href:android?intent:ios?scheme:web,web,store,ios,label:'네이버지도 경유 길찾기'};
 }
-async function updateCourseRoute(){lastCardRoute=null;refreshRouteChoices();
+async function updateCourseRoute(){lastCardRoute=null;const candidate=nearFirstCandidate();if(!candidate)refreshRouteChoices();
  const revision=++courseRevision;if(courseLayer){map.removeLayer(courseLayer);courseLayer=null;}courseLine=null;courseLoading=false;courseError='';
  let points=tripPoints();if(points.length<2){renderFavorites();renderWaypoint();return;}
  if(!courseSafe()){courseError='이 휴게소는 방향별 도착 위치 확인이 필요합니다.';renderFavorites();renderWaypoint();return;}
  courseLoading=true;renderFavorites();renderWaypoint();const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
- try{let candidateData=null;const candidate=nearFirstCandidate();
+ try{let candidateData=null;
   if(candidate){try{const response=await routeRequest('https://router.project-osrm.org/route/v1/driving/'+candidate.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson',controller.signal);if(revision!==courseRevision)return;if(response.routes?.[0]?.geometry?.coordinates?.length>1&&nearFirstSafe(response.routes[0])){routeStops=candidate.slice(1,-1);syncStopSelections();points=tripPoints();candidateData=response;document.getElementById('status').textContent='충전소 도착 여유 50km를 확인해 가까운 맛집을 먼저 배치했습니다.';}}catch(e){if(controller.signal.aborted)throw e;}}
   const url='https://router.project-osrm.org/route/v1/driving/'+points.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson';
+  if(candidateData){const key=KAKAO_ROUTE_BASE+'|'+routePriority+'|'+serverConfig.apiBase+'|'+url;routeMemo.set(key,{time:Date.now(),json:JSON.stringify(candidateData)});while(routeMemo.size>ROUTE_CACHE_LIMIT)routeMemo.delete(routeMemo.keys().next().value);}
+  if(candidate)refreshRouteChoices();
   const data=candidateData||(dest&&previewPath()===points.map(p=>p.lon+','+p.lat).join(';')?await selectedPreviewRoad():await routeRequest(url,controller.signal));
   if(revision!==courseRevision)return;const line=data.routes?.[0]?.geometry?.coordinates;if(!line||line.length<2)throw Error('경로 없음');
   courseLine=line.map(p=>({lon:p[0],lat:p[1]}));buildTravelCard(data.routes[0],tripPoints());courseLayer=mapUI.geoJSON({type:'LineString',coordinates:line},{style:{weight:6,opacity:.85}}).addTo(map);
