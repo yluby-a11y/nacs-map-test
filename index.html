@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.19</title>
+<title>전국 NACS 충전지도 V2.20</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -59,12 +59,13 @@ a.naver{background:#03c75a;color:#fff}
 </style><style>.header-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.header-title h1{margin:0;flex:1;min-width:190px}#homeInstallButton{background:#334155;color:#fff;font-size:11px;padding:8px;white-space:nowrap;min-height:36px}#homeInstallDialog{width:calc(100% - 32px);max-width:390px;border:0;border-radius:16px;padding:22px;color:#16181d}#homeInstallDialog::backdrop{background:#11182799}#homeInstallDialog h3{margin:0 0 12px}#homeInstallGuide{font-size:14px;line-height:1.7}#homeInstallBrowser{background:#0f766e;color:white}header{padding-top:max(10px,env(safe-area-inset-top))}body{padding-bottom:env(safe-area-inset-bottom)}</style></head>
 <body>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.19</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.20</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
  document.getElementById('testServerBadge').hidden=false;
  document.title='[TEST 서버] '+document.title;
+ document.addEventListener('DOMContentLoaded',()=>{document.getElementById('testCatalogNotice').hidden=false;});
 }
 </script>
 <div id="naverHelp" hidden aria-live="polite"></div>
@@ -92,7 +93,7 @@ if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(l
 </div></summary><input id="preferSupercharger" type="checkbox" hidden><p class="meta">충전소가 필요하면 충전소 추천로 코스를 살펴본 뒤 선택해 주세요. 맛집만 선택해도 길찾기할 수 있습니다.</p><section id="chargerCheck" class="card" hidden aria-live="polite"></section><div id="list"></div><section id="locationCandidates"></section></details>
 <details class="favorites-panel" id="favoritesPanel"><summary class="food-heading"><span id="foodSummary">2. 맛집</span><div class="food-tabs" role="group" aria-label="맛집 위치 선택"><button data-food-scope="charger" onclick="event.preventDefault();event.stopPropagation();setFoodScope('charger')">충전소 주변</button><button data-food-scope="destination" onclick="event.preventDefault();event.stopPropagation();setFoodScope('destination')">목적지 주변</button><button data-food-scope="route" onclick="event.preventDefault();event.stopPropagation();setFoodScope('route')">경로 주변</button><button data-food-scope="all" onclick="event.preventDefault();event.stopPropagation();setFoodScope('all')">전체</button></div></summary><p class="meta" id="nearbyContext">충전소 목록에서 ‘근처 맛집’을 선택하면 주변 맛집을 볼 수 있습니다.</p><div class="favorite-controls"><input id="favoriteSearch" type="hidden" value=""><input type="checkbox" id="showFavorites" hidden><label>주변 범위 <select id="favoriteRadius" aria-label="맛집 주변 범위"><option value="5">5km</option><option value="10">10km</option><option value="20">20km</option></select></label></div><div id="favoriteStatus" class="meta" aria-live="polite"></div><div id="favoriteResolveResults" hidden class="card"></div><div id="favoriteList" class="favorite-list"></div><p class="meta">공유 목록 기준 2026-10-06 · <a href="https://kko.to/9027A8TFTd" target="_blank" rel="noopener">원본 즐겨찾기</a> · 위치는 등록 주소 기준이며 출입구는 길찾기에서 확인해 주세요.</p></details><section id="waypointInfo" class="step-panel" aria-live="polite"></section><section class="step-panel" id="travelCardPanel"><h3 id="travelCardTitle">여행 카드</h3><input id="cardFullRange" type="hidden"><input id="planDeparture" type="hidden"><input id="planChargeStay" type="hidden" value="0"><input id="planFoodStay" type="hidden" value="0"><div id="scheduleOutput" aria-live="polite"></div><div class="actions"><button onclick="downloadSchedule()">사진으로 저장</button><button onclick="shareSchedule()">여행 카드 공유</button></div><p id="scheduleStatus" class="meta" aria-live="polite"></p><details><summary>저장한 코스</summary><button onclick="showSavedSchedules()">저장 목록 보기</button><div id="savedSchedules"></div></details></section><section class="step-panel" id="returnPanel"><h3>돌아오는 길 · 참고 카드</h3><p class="meta">귀가 시작 시 거리만 바꿔 확인하세요. 편도 코스는 그대로 유지됩니다.</p><div class="actions"><label>귀가 시작 주행가능거리(km) <input id="returnRange" oninput="this.dataset.userEdited='true';invalidateReturnInputs()" type="number" min="0" max="1500" style="width:90px"></label><input id="return80Range" type="hidden"></div><input id="returnSoc" type="hidden"><input id="returnFullRange" type="hidden"><details id="returnInputs" hidden></details><p class="meta">상단에 저장한 80% 주행가능거리를 사용하고, 최소 50km 여유를 남깁니다.</p><button id="returnRecommendBtn" onclick="recommendReturnCharging()">귀가 충전 추천</button><p id="returnStatus" class="meta" aria-live="polite"></p><div id="returnResults"></div><aside id="returnAd" class="recommend-ad" aria-label="광고" hidden></aside></section>
 <section class="step-panel" id="errorReportPanel" hidden><h3>오류 리포트</h3><label>오류 항목 <select id="reportCategory"><option value="search">검색</option><option value="route">경로·추천</option><option value="charger">충전소</option><option value="food">맛집</option><option value="card">여행 카드</option><option value="return">귀가 추천</option><option value="other">기타</option></select></label><p><textarea id="reportMessage" aria-label="오류 상황" maxlength="1500" rows="4" style="width:100%;box-sizing:border-box" placeholder="어떤 버튼을 눌렀고, 어떤 문제가 생겼는지 적어 주세요."></textarea></p><p class="meta">작성한 내용·버전·기기 종류만 전송합니다. 위치·주소는 자동으로 보내지 않습니다. 개인정보는 적지 마세요. 리포트는 30일 보관됩니다.</p><div class="actions"><button id="reportSend" onclick="submitErrorReport()">리포트 보내기</button><button onclick="document.getElementById('errorReportPanel').hidden=true">닫기</button></div><p id="reportStatus" aria-live="polite"></p></section>
-<footer><button onclick="openErrorReport()">오류 리포트 보내기</button><p>충전소 목록 기준 2026-10-02 · WATER 신규 지점은 순차 개통 상태를 확인하세요.</p></footer>
+<footer><button onclick="openErrorReport()">오류 리포트 보내기</button><p id="testCatalogNotice" hidden>충전소 목록 기준 2026-10-02 · WATER 신규 지점은 순차 개통 상태를 확인하세요.</p></footer>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?libraries=services&appkey=c25f7253f59da913e49d28b5bc303da4"></script>
 <script>
 const items=[];
@@ -260,10 +261,10 @@ async function verifiedSession(){
  if(apiSessionPending)return apiSessionPending;
  apiSessionPending=(async()=>{
   const response=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/config',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('보안 검증 설정을 확인하지 못했습니다.');const config=await response.json();
-  let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='position:fixed;z-index:10000;left:50%;top:35%;transform:translateX(-50%);padding:18px;background:white;border:1px solid #ddd;border-radius:16px;box-shadow:0 8px 40px #0003;max-width:90vw';document.body.appendChild(panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인 중';panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
+  let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='margin:0 10px;background:white;border-radius:10px;';document.querySelector('header').insertAdjacentElement('afterend',panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인이 필요합니다.';message.hidden=true;panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
   try{
    if(!window.turnstile)await new Promise((resolve,reject)=>{let script=document.getElementById('turnstileLoader');if(!script){script=document.createElement('script');script.id='turnstileLoader';script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';document.head.appendChild(script);}script.addEventListener('load',resolve,{once:true});script.addEventListener('error',()=>reject(Error('보안 확인에 연결하지 못했습니다.')),{once:true});setTimeout(()=>reject(Error('보안 확인 시간이 초과됐습니다. 새로고침해 주세요.')),15000);});
-   const challenge=await new Promise((resolve,reject)=>{let widget;const timeout=setTimeout(()=>{if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인을 완료하지 못했습니다. 새로고침해 주세요.'));},120000);widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',callback:token=>{clearTimeout(timeout);window.turnstile.remove(widget);resolve(token);},'error-callback':()=>{clearTimeout(timeout);if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인에 실패했습니다. 새로고침해 주세요.'));}});});
+   const challenge=await new Promise((resolve,reject)=>{let widget;const timeout=setTimeout(()=>{if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인을 완료하지 못했습니다. 새로고침해 주세요.'));},120000);widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',appearance:'interaction-only','before-interactive-callback':()=>{message.hidden=false;panel.style.padding='12px';},'after-interactive-callback':()=>{message.hidden=true;panel.style.padding='0';},callback:token=>{clearTimeout(timeout);window.turnstile.remove(widget);resolve(token);},'error-callback':()=>{clearTimeout(timeout);if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인에 실패했습니다. 새로고침해 주세요.'));}});});
    const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenge}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('보안 확인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');apiSession=await r.json();return apiSession.token;
   }finally{panel.remove();}
  })();try{return await apiSessionPending;}finally{apiSessionPending=null;}
@@ -283,17 +284,17 @@ async function loadServerCatalog(){
  if(catalogLoadTask)return catalogLoadTask;
  catalogLoadTask=(async()=>{try{
   const get=async path=>{const r=await apiFetch(KAKAO_ROUTE_BASE+path,{timeoutMs:12000});if(!r.ok)throw Error('목록 응답 오류');return r.json();};
-  const meta=await get('/v1/catalog');if(!['V2.9','V2.14'].includes(meta.version)||meta.chargers!==195||meta.restaurants!==464)throw Error('목록 버전 확인 필요');
+  const meta=await get('/v1/catalog');if(!/^V\d+\.\d+$/.test(meta.version)||!Number.isInteger(meta.chargers)||meta.chargers<1||meta.chargers>1000||!Number.isInteger(meta.restaurants)||meta.restaurants<0||meta.restaurants>3000)throw Error('목록 버전 확인 필요');
   const collect=async kind=>{const rows=[];let cursor='';for(let page=0;page<4;page++){const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));if(!Array.isArray(data.places))throw Error('목록 형식 오류');rows.push(...data.places);if(!data.nextCursor)return rows;if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;}throw Error('목록 초과');};
   const [chargers,restaurants]=await Promise.all([collect('chargers'),collect('restaurants')]);
-  if(chargers.length!==195||restaurants.length!==464)throw Error('목록 개수 오류');
+  if(chargers.length!==meta.chargers||restaurants.length!==meta.restaurants)throw Error('목록 개수 오류');
   chargers.sort((a,b)=>a.sourceIndex-b.sourceIndex);const nextItems=[],nextCoords={},nextNav={},nextQuality={},nextRoute={},nextVerification={};
   for(let i=0;i<chargers.length;i++){const p=chargers[i];if(p.sourceIndex!==i||p.kind!=='charger'||typeof p.name!=='string')throw Error('충전소 목록 오류');
    const {id,sourceIndex,kind,location,navigationLocation,coordinateQuality,verification,recommendationLocation,navigationVerified,...item}=p;
    nextItems.push(item);if(location)nextCoords[i]=location;if(navigationLocation)nextNav[i]=navigationLocation;nextQuality[i]=coordinateQuality;if(verification)nextVerification[i]=verification;
    if(recommendationLocation&&JSON.stringify(recommendationLocation)!==JSON.stringify(location))nextRoute[i]=recommendationLocation;
   }
-  const byId=new Map(restaurants.map(p=>[p.sourceId,p]));if(byId.size!==464)throw Error('맛집 목록 중복');
+  const byId=new Map(restaurants.map(p=>[p.sourceId,p]));if(byId.size!==restaurants.length)throw Error('맛집 목록 중복');
   const nextFavorites=restaurants.map(p=>{if(p.kind!=='restaurant')throw Error('맛집 목록 오류');const {id,sourceId,kind,...item}=p;return {...item,id:sourceId};});
   // Startup only: preserve any location correction already made by this user.
   for(const i of Object.keys(coordQuality)){if(coordQuality[i]==='user_kakao'){nextItems[i]=items[i];nextCoords[i]=coords[i];nextNav[i]=navCoords[i];nextQuality[i]=coordQuality[i];nextVerification[i]=chargerVerification[i];}}
@@ -867,7 +868,7 @@ function renderFavorites(){
  });
  if(!visible.length){const empty=document.createElement('p');empty.className='meta';empty.textContent=foodScope==='route'&&!courseLine?context:'이 범위에 등록된 맛집이 없습니다. 범위를 넓히거나 다른 위치를 선택해 보세요.';list.appendChild(empty);}
  if(matches.length>visible.length){const more=document.createElement('button');more.textContent='맛집 6곳 더 보기';more.onclick=()=>{foodPage++;renderFavorites();};list.appendChild(more);}
- document.getElementById('favoriteStatus').textContent=matches.length+'곳 중 '+visible.length+'곳 표시 · '+(foodScope==='route'?'경로에서 직선거리 ':foodScope==='all'?'전체 즐겨찾기 · ':'직선거리 ')+(foodScope==='all'?'464곳':radius+'km 이내')+' · 실제 이동 거리는 길찾기에서 확인';
+ document.getElementById('favoriteStatus').textContent=matches.length+'곳 중 '+visible.length+'곳 표시 · '+(foodScope==='route'?'경로에서 직선거리 ':foodScope==='all'?'전체 즐겨찾기 · ':'직선거리 ')+(foodScope==='all'?favorites.length+'곳':radius+'km 이내')+' · 실제 이동 거리는 길찾기에서 확인';
 }
 
 async function locateFavorites(){
@@ -1098,7 +1099,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.19',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.20',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
