@@ -4,14 +4,20 @@
   const guide = document.getElementById('homeInstallGuide');
   const browserLink = document.getElementById('homeInstallBrowser');
   const standalone = window.matchMedia('(display-mode: standalone)');
+  const samsung = /SamsungBrowser/i.test(navigator.userAgent);
   let pendingPrompt = null;
   const installed = () => standalone.matches || navigator.standalone === true;
+  function chromeInstallUrl() {
+    const url = new URL('../', document.querySelector('link[rel="manifest"]').href);
+    return 'intent://' + url.host + url.pathname + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url.href) + ';end';
+  }
   const update = () => { button.hidden = installed(); };
   update();
   standalone.addEventListener?.('change', update);
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
-    pendingPrompt = event;
+    if (!samsung) pendingPrompt = event;
+    if (dialog.open && !samsung) dialog.close();
   });
   window.addEventListener('appinstalled', () => {
     pendingPrompt = null;
@@ -35,8 +41,12 @@
       }
     } else if (ios) {
       guide.textContent = '공유 버튼 → 홈 화면에 추가 → 추가를 눌러주세요. 메뉴가 보이지 않으면 Safari에서 열어주세요.';
-    } else if (/SamsungBrowser/i.test(ua)) {
-      guide.textContent = '브라우저 메뉴(☰) → 페이지 추가 → 홈 화면을 선택하세요. 설치 메뉴가 보이면 설치를 눌러주세요.';
+    } else if (samsung) {
+      guide.textContent = '삼성 인터넷 메뉴(☰) → 페이지 추가 → 홈 화면에서 바로가기를 추가할 수 있습니다. 앱 설치가 Play 프로텍트에 차단되면 Chrome에서 설치해 주세요. 설치한 아이콘으로 앱처럼 사용할 수 있습니다.';
+      const url = new URL('../', document.querySelector('link[rel="manifest"]').href);
+      browserLink.href = 'intent://' + url.host + url.pathname + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url.href) + ';end';
+      browserLink.textContent = 'Chrome에서 설치하기';
+      browserLink.hidden = false;
     } else if (android) {
       guide.textContent = 'Chrome 메뉴(⋮) → 홈 화면에 추가 또는 설치 및 바로가기 만들기 → 설치를 눌러주세요. 설치 준비 중이라면 잠시 뒤 다시 시도하세요.';
     } else {
@@ -45,6 +55,7 @@
     if (!dialog.open) dialog.showModal();
   }
   button.addEventListener('click', async () => {
+    if (samsung) { window.location.href = chromeInstallUrl(); return; }
     if (!pendingPrompt) { showGuide(); return; }
     const prompt = pendingPrompt;
     pendingPrompt = null;
