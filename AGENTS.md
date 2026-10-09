@@ -35,3 +35,13 @@ PC Git Credential Manager의 yluby-a11y 인증으로 Git을 사용한다. 토큰
 
 ## 버전 규칙 (2026-10-08 사용자 지시)
 현재 버전은 V2이다. 이후 새 버전은 0.1씩 증가한다(V2.1, V2.2 등). 사용자가 크게 올리라고 명시적으로 요청할 때만 정수 버전을 1 올린다(V3 등). 버전 변경은 제목/화면과 배포 기록에 일관되게 적용한다.
+
+
+## 비밀번호 테스트 서버 전환 (2026-10-09 사용자 지시)
+
+- 테스트 주소는 https://nacs-map-preview.hoy-kim.workers.dev/nacs-map-test/ 이다.
+- 기존 공개 GitHub Pages 테스트 주소는 비활성화했다. 테스트 저장소에 소스를 보존하되 Pages를 다시 공개하지 않는다.
+- 통계 Worker의 기존 비밀번호 인증을 내부 서비스 바인딩으로 재사용한다. 비밀번호, 검증값, 서명 키를 복사하거나 공개하지 않는다.
+- 보호된 테스트 배포는 outputs/nacs-map-backend/test-site/wrangler.json을 사용한다. 승인된 테스트 index.html, sw.js, pwa만 assets/nacs-map-test에 복사한다. run_worker_first=true와 preview_urls=false를 유지한다.
+- GitHub Pages 배포 검증 대신 보호된 Worker 배포 ID, 미로그인 파일/API 접근 차단, 로그인 후 지도/추천과 실제 파일 일치를 확인한다.
+- 운영은 기존 /nacs-map/ 주소와 설치 범위를 유지한다. 새 테스트 기능을 운영에 올리는 승인 절차는 동일하게 유지한다.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.24</title>
+<title>전국 NACS 충전지도 V2.25</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -59,10 +59,10 @@ a.naver{background:#03c75a;color:#fff}
 </style><style>.header-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.header-title h1{margin:0;flex:1;min-width:190px}#homeInstallButton{background:#334155;color:#fff;font-size:11px;padding:8px;white-space:nowrap;min-height:36px}#homeInstallDialog{width:calc(100% - 32px);max-width:390px;border:0;border-radius:16px;padding:22px;color:#16181d}#homeInstallDialog::backdrop{background:#11182799}#homeInstallDialog h3{margin:0 0 12px}#homeInstallGuide{font-size:14px;line-height:1.7}#homeInstallBrowser{background:#0f766e;color:white}header{padding-top:max(10px,env(safe-area-inset-top))}body{padding-bottom:env(safe-area-inset-bottom)}</style></head>
 <body>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.24</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.25</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
-if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
+if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
  document.getElementById('testServerBadge').hidden=false;
  document.title='[TEST 서버] '+document.title;
  document.addEventListener('DOMContentLoaded',()=>{document.getElementById('testCatalogNotice').hidden=false;});
@@ -254,13 +254,16 @@ function render(){
 }
 let myPos=null,dest=null,route=null,routeLayer=null,recommendMode=false;
 let originSearchSequence=0,originCandidates=[];
-const KAKAO_ROUTE_BASE='https://nacs-map-recommend-test.hoy-kim.workers.dev';
+const KAKAO_ROUTE_BASE=location.hostname==='nacs-map-preview.hoy-kim.workers.dev'?location.origin+'/preview-api':'https://nacs-map-recommend-test.hoy-kim.workers.dev';
 let apiSession=null,apiSessionPending=null;
 async function verifiedSession(){
  if(apiSession&&apiSession.expires*1000>Date.now()+30000)return apiSession.token;
  if(apiSessionPending)return apiSessionPending;
  apiSessionPending=(async()=>{
-  const response=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/config',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('보안 검증 설정을 확인하지 못했습니다.');const config=await response.json();
+  const response=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/config',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error(response.status===401&&KAKAO_ROUTE_BASE===location.origin+'/preview-api'?'테스트 로그인 시간이 끝났습니다. 새로고침하여 로그인해 주세요.':'보안 검증 설정을 확인하지 못했습니다.');const config=await response.json();
+  if(config.passwordSession===true&&KAKAO_ROUTE_BASE===location.origin+'/preview-api'){
+   const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('테스트 로그인 상태를 확인해 주세요.');apiSession=await r.json();return apiSession.token;
+  }
   let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='margin:0 10px;background:white;border-radius:10px;';document.querySelector('header').insertAdjacentElement('afterend',panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인이 필요합니다.';message.hidden=true;panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
   try{
    if(!window.turnstile)await new Promise((resolve,reject)=>{let script=document.getElementById('turnstileLoader');if(!script){script=document.createElement('script');script.id='turnstileLoader';script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';document.head.appendChild(script);}script.addEventListener('load',resolve,{once:true});script.addEventListener('error',()=>reject(Error('보안 확인에 연결하지 못했습니다.')),{once:true});setTimeout(()=>reject(Error('보안 확인 시간이 초과됐습니다. 새로고침해 주세요.')),15000);});
@@ -439,7 +442,19 @@ function clearOrigin(){
  document.getElementById('origin').value='';document.getElementById('originResults').style.display='none';
  invalidateRecommendation();updateCourseRoute();renderWaypoint();renderFavorites();
 }
-let routeStops=[];
+let routeStops=[],manualStopOrder=false;
+function nearFirstCandidate(){
+ if(manualStopOrder||!myPos||!dest||routeStops.length!==2)return null;
+ const charger=routeStops.find(p=>p.kind==='charger'),food=routeStops.find(p=>p.kind==='food');
+ if(!charger||!food||routeStops[0].kind==='food')return null;
+ const distance=p=>Math.hypot(p.lat-myPos.lat,(p.lon-myPos.lon)*Math.cos(myPos.lat*Math.PI/180));
+ return distance(food)<distance(charger)?[myPos,food,charger,dest]:null;
+}
+function nearFirstSafe(road){
+ const legs=road?.legs;if(!legs||legs.length!==3||legs.some(l=>!Number.isFinite(l.distance)||l.distance<0))return false;
+ const available=Number(String(document.getElementById('batteryRange').value).trim()||300);
+ return Number.isFinite(available)&&available>=0&&(legs[0].distance+legs[1].distance)/1000+50<=available;
+}
 function selectedTripStops(){return routeStops.length?routeStops:[...(selectedNearbyCharger?[{...selectedNearbyCharger,kind:'charger'}]:[]),...(selectedWaypoint?[{...selectedWaypoint,kind:'food'}]:[])];}
 function syncStopSelections(){selectedNearbyCharger=routeStops.filter(p=>p.kind==='charger').at(-1)||null;selectedWaypoint=routeStops.filter(p=>p.kind==='food').at(-1)||null;}
 function effectiveDestination(){return dest||routeStops.at(-1)||selectedWaypoint||selectedNearbyCharger;}
@@ -449,9 +464,9 @@ function addTripStop(point){
  routeStops=[...list,{...point}];syncStopSelections();document.getElementById('status').textContent='경유지 추가: '+point.name;return true;
 }
 function removeTripStop(i){routeStops=selectedTripStops().filter((p,n)=>n!==i);syncStopSelections();stopListChanged();}
-function moveTripStop(i,delta){const list=[...selectedTripStops()],j=i+delta;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];routeStops=list;syncStopSelections();stopListChanged();}
+function moveTripStop(i,delta){const list=[...selectedTripStops()],j=i+delta;if(j<0||j>=list.length)return;manualStopOrder=true;[list[i],list[j]]=[list[j],list[i]];routeStops=list;syncStopSelections();stopListChanged();}
 function stopListChanged(){if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}invalidateRecommendation();updateCourseRoute();renderFavorites();renderWaypoint();}
-function stopManagerHTML(){const stops=selectedTripStops();return '<h3 style="margin:0">3. 경유지 · 길찾기</h3><p class="meta">추가한 순서대로 방문합니다. 순서를 바꾸거나 경유지를 빼고 길찾기하세요. 목적지를 지정하지 않으면 마지막 장소가 도착지입니다.</p><ol class="course-steps">'+stops.map((p,i)=>'<li><b>'+(p.kind==='charger'?'⚡ ':'🍽️ ')+escapeHTML(p.name)+'</b><div class="actions">'+(i?'<button aria-label="'+escapeHTML(p.name)+' 앞순서로" onclick="moveTripStop('+i+',-1)">↑</button>':'')+(i<stops.length-1?'<button aria-label="'+escapeHTML(p.name)+' 뒷순서로" onclick="moveTripStop('+i+',1)">↓</button>':'')+'<button onclick="removeTripStop('+i+')">경유지 빼기</button></div></li>').join('')+'</ol><div class="actions"><button onclick="goToStep(&quot;charging&quot;)">충전소 경유지 추가</button><button onclick="goToStep(&quot;food&quot;)">맛집 경유지 추가</button></div>';
+function stopManagerHTML(){const stops=selectedTripStops();return '<h3 style="margin:0">3. 경유지 · 길찾기</h3><p class="meta">처음 선택할 때 안전하게 갈 수 있는 가까운 맛집을 먼저 배치합니다. 방문 순서는 직접 바꿀 수 있습니다. 목적지를 지정하지 않으면 마지막 장소가 도착지입니다.</p><ol class="course-steps">'+stops.map((p,i)=>'<li><b>'+(p.kind==='charger'?'⚡ ':'🍽️ ')+escapeHTML(p.name)+'</b><div class="actions">'+(i?'<button aria-label="'+escapeHTML(p.name)+' 앞순서로" onclick="moveTripStop('+i+',-1)">↑</button>':'')+(i<stops.length-1?'<button aria-label="'+escapeHTML(p.name)+' 뒷순서로" onclick="moveTripStop('+i+',1)">↓</button>':'')+'<button onclick="removeTripStop('+i+')">경유지 빼기</button></div></li>').join('')+'</ol><div class="actions"><button onclick="goToStep(&quot;charging&quot;)">충전소 경유지 추가</button><button onclick="goToStep(&quot;food&quot;)">맛집 경유지 추가</button></div>';
 }
 function samePlace(a,b){return !!a&&!!b&&a.lat===b.lat&&a.lon===b.lon;}
 function chargerRouteReady(i){return !!navCoords[i]||(!['legacy_anchor','unverified'].includes(coordQuality[i])&&(!items[i]?.highwayRestArea||!!navCoords[i]));}
@@ -496,7 +511,7 @@ async function showMyLocation(){
  catch(e){alert('현재 위치를 가져오지 못했습니다. 브라우저의 이 사이트 위치 권한을 확인해 주세요.')}
 }
 function clearDestination(){
- destinationSearchSequence++;recommendationRevision++;routeStops=[];
+ destinationSearchSequence++;recommendationRevision++;routeStops=[];manualStopOrder=false;
  selectedWaypoint=null;if(waypointMarker){map.removeLayer(waypointMarker);waypointMarker=null;}renderWaypoint();
  selectedNearbyCharger=null;courseRevision++;if(courseLayer){map.removeLayer(courseLayer);courseLayer=null;}courseLine=null;courseLoading=false;courseError='';document.getElementById('chargingPanel').open=true;dest=null;renderFavorites();renderWaypoint();route=null;recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='block';
  document.getElementById('destination').value='';
@@ -909,11 +924,13 @@ function naverRoutePoints(points){
 }
 async function updateCourseRoute(){lastCardRoute=null;refreshRouteChoices();
  const revision=++courseRevision;if(courseLayer){map.removeLayer(courseLayer);courseLayer=null;}courseLine=null;courseLoading=false;courseError='';
- const points=tripPoints();if(points.length<2){renderFavorites();renderWaypoint();return;}
+ let points=tripPoints();if(points.length<2){renderFavorites();renderWaypoint();return;}
  if(!courseSafe()){courseError='이 휴게소는 방향별 도착 위치 확인이 필요합니다.';renderFavorites();renderWaypoint();return;}
  courseLoading=true;renderFavorites();renderWaypoint();const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
- try{const url='https://router.project-osrm.org/route/v1/driving/'+points.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson';
-  const data=dest&&previewPath()===points.map(p=>p.lon+','+p.lat).join(';')?await selectedPreviewRoad():await routeRequest(url,controller.signal);
+ try{let candidateData=null;const candidate=nearFirstCandidate();
+  if(candidate){try{const response=await routeRequest('https://router.project-osrm.org/route/v1/driving/'+candidate.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson',controller.signal);if(revision!==courseRevision)return;if(response.routes?.[0]?.geometry?.coordinates?.length>1&&nearFirstSafe(response.routes[0])){routeStops=candidate.slice(1,-1);syncStopSelections();points=tripPoints();candidateData=response;document.getElementById('status').textContent='충전소 도착 여유 50km를 확인해 가까운 맛집을 먼저 배치했습니다.';}}catch(e){if(controller.signal.aborted)throw e;}}
+  const url='https://router.project-osrm.org/route/v1/driving/'+points.map(p=>p.lon+','+p.lat).join(';')+'?overview=full&geometries=geojson';
+  const data=candidateData||(dest&&previewPath()===points.map(p=>p.lon+','+p.lat).join(';')?await selectedPreviewRoad():await routeRequest(url,controller.signal));
   if(revision!==courseRevision)return;const line=data.routes?.[0]?.geometry?.coordinates;if(!line||line.length<2)throw Error('경로 없음');
   courseLine=line.map(p=>({lon:p[0],lat:p[1]}));buildTravelCard(data.routes[0],tripPoints());courseLayer=mapUI.geoJSON({type:'LineString',coordinates:line},{style:{weight:6,opacity:.85}}).addTo(map);
  }catch(e){if(revision!==courseRevision)return;courseError='경로를 계산하지 못했습니다. 재시도를 눌러 주세요.';}
@@ -1106,7 +1123,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.24',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.25',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
@@ -1191,7 +1208,7 @@ function restoreSchedule(i,focusRoute=false){
  try{const p=savedSchedules()[i];if(p?.schema!=='nacs-trip-plan'||![1,2].includes(p.version)||!validPlanPoint(p.trip?.origin)||!validPlanPoint(p.trip?.destination)||(p.food&&!validPlanPoint(p.food))||(p.charger&&(!validPlanPoint(p.charger)||!Number.isInteger(p.charger.index)||!items[p.charger.index])))throw Error('자료 확인 필요');
   if(p.version===2&&(!Array.isArray(p.routeStops)||p.routeStops.length>(p.explicitDestination?5:6)||p.routeStops.some(s=>!validPlanPoint(s)||!['charger','food'].includes(s.kind)||(s.kind==='charger'&&(!Number.isInteger(s.index)||!items[s.index])))||new Set(p.routeStops.map(s=>s.lat+','+s.lon)).size!==p.routeStops.length))throw Error('경유지 자료 확인 필요');
   if(p.cardFullRange!=null&&(!Number.isFinite(p.cardFullRange)||p.cardFullRange<=0||p.cardFullRange>1500))throw Error('완충 주행거리 확인 필요');
-  resetTrip();routePriority=["RECOMMEND","TIME","DISTANCE"].includes(p.routePriority)?p.routePriority:"RECOMMEND";document.getElementById("routePriority").value=routePriority;dest=p.version===2&&!p.explicitDestination?null:{...p.trip.destination};selectedNearbyCharger=p.charger?{...p.charger}:null;selectedWaypoint=p.food?{...p.food}:null;routeStops=p.version===2?p.routeStops.map(s=>s.kind==='charger'&&chargerRouteReady(s.index)?{...s,...(navCoords[s.index]||coords[s.index]),address:items[s.index].address}:({...s})):[];if(selectedNearbyCharger&&chargerRouteReady(selectedNearbyCharger.index))selectedNearbyCharger={...selectedNearbyCharger,...(navCoords[selectedNearbyCharger.index]||coords[selectedNearbyCharger.index]),address:items[selectedNearbyCharger.index].address};if(p.version===2)syncStopSelections();originCandidates=[{...p.trip.origin}];chooseOrigin(0);document.getElementById('destination').value=dest?.name||'';if(destMarker)map.removeLayer(destMarker);if(dest)destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup(escapeHTML(dest.name));if(selectedWaypoint)waypointMarker=mapUI.favoriteMarker([selectedWaypoint.lat,selectedWaypoint.lon],selectedWaypoint.name).addTo(map).bindPopup(escapeHTML(selectedWaypoint.name));
+  resetTrip();manualStopOrder=true;routePriority=["RECOMMEND","TIME","DISTANCE"].includes(p.routePriority)?p.routePriority:"RECOMMEND";document.getElementById("routePriority").value=routePriority;dest=p.version===2&&!p.explicitDestination?null:{...p.trip.destination};selectedNearbyCharger=p.charger?{...p.charger}:null;selectedWaypoint=p.food?{...p.food}:null;routeStops=p.version===2?p.routeStops.map(s=>s.kind==='charger'&&chargerRouteReady(s.index)?{...s,...(navCoords[s.index]||coords[s.index]),address:items[s.index].address}:({...s})):[];if(selectedNearbyCharger&&chargerRouteReady(selectedNearbyCharger.index))selectedNearbyCharger={...selectedNearbyCharger,...(navCoords[selectedNearbyCharger.index]||coords[selectedNearbyCharger.index]),address:items[selectedNearbyCharger.index].address};if(p.version===2)syncStopSelections();originCandidates=[{...p.trip.origin}];chooseOrigin(0);document.getElementById('destination').value=dest?.name||'';if(destMarker)map.removeLayer(destMarker);if(dest)destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup(escapeHTML(dest.name));if(selectedWaypoint)waypointMarker=mapUI.favoriteMarker([selectedWaypoint.lat,selectedWaypoint.lon],selectedWaypoint.name).addTo(map).bindPopup(escapeHTML(selectedWaypoint.name));
   tripCardFullRange=p.cardFullRange||null;document.getElementById('cardFullRange').value=tripCardFullRange||'';document.getElementById('planDeparture').value=p.departure;document.getElementById('planChargeStay').value=String(p.chargeStay);document.getElementById('planFoodStay').value=String(p.foodStay);
   const pref=p.preferences||{};document.getElementById('batteryMode').value='range';document.getElementById('batteryRange').value=pref.mode==='soc'&&pref.fullRangeKm&&Number.isFinite(pref.socPercent)?Math.round(pref.fullRangeKm*pref.socPercent/100):(pref.rangeKm??'');document.getElementById('batterySoc').value=pref.socPercent??'';document.getElementById('batteryFullRange').value=pref.fullRangeKm??'';document.getElementById('batteryReserve').value=String(Math.max(50,pref.reserveKm??50));const vehicle=readVehicleSettings();document.getElementById('battery80Range').value=vehicle?(vehicle.range80Km??''):(pref.range80Km||(pref.fullRangeKm?Math.round(pref.fullRangeKm*.8):''));document.getElementById('preferSupercharger').checked=pref.preferSupercharger===true;if(!applyTripPreferences())throw Error('추천 입력 확인 필요');if(vehicle){tripCardFullRange=tripPreferences.fullRangeKm;document.getElementById('cardFullRange').value=tripCardFullRange||'';}
   document.getElementById('scheduleStatus').textContent='저장한 코스를 불러왔습니다. 여행 카드를 계산하고 있습니다.';renderFavorites();renderWaypoint();if(focusRoute){const panel=document.getElementById('waypointInfo');if(panel.scrollIntoView)panel.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -1225,4 +1242,4 @@ loadVehicleSettings();render();renderLocationCandidates(null,null);
 if(typeof document.readyState==='string')loadServerCatalog();
 </script>
 <script>if(!location.pathname.includes('nacs-map-test')){const beacon=document.createElement('script');beacon.type='module';beacon.src='https://static.cloudflareinsights.com/beacon.min.js';beacon.setAttribute('data-cf-beacon',JSON.stringify({token:'3699f902c53b430899c1a09f6c70e8e2'}));document.head.appendChild(beacon);}</script>
-<script src="./pwa/install.js?v=2.24"></script></body></html>
+<script src="./pwa/install.js?v=2.25"></script></body></html>
