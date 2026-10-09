@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.18</title>
+<title>전국 NACS 충전지도 V2.19</title>
+<link rel="manifest" href="./pwa/manifest.webmanifest">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NACS 충전지도">
+<link rel="apple-touch-icon" href="./pwa/icon-180.png">
 
 <style>
 [hidden]{display:none!important} *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#f6f7f9;color:#16181d}
@@ -51,9 +56,10 @@ a.naver{background:#03c75a;color:#fff}
 <style>.food-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;list-style:none}.food-heading::-webkit-details-marker{display:none}#foodSummary{white-space:nowrap}#foodSummary:before{content:"▶ ";font-size:12px}#favoritesPanel[open] #foodSummary:before{content:"▼ "}.food-heading .food-tabs{margin:0;gap:4px;flex-wrap:nowrap}.food-heading .food-tabs button{font-size:11px;padding:8px 7px;white-space:nowrap}.map-display{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b}.map-toggle{background:#eef2f7;color:#334155;font-size:12px;padding:8px 12px}.map-toggle.active{background:#0f766e;color:white}.favorite-controls{margin:10px 0}.favorite-controls label{font-size:12px;color:#64748b}@media(max-width:380px){.food-heading{gap:6px}.food-heading .food-tabs button{padding:8px 5px;font-size:10px}}</style>
 <style>
 .route-field{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;column-gap:8px}.trip-input .route-field>label{margin:0;white-space:nowrap}.route-field .trip-input-row{min-width:0}.route-field #originResults,.route-field #destResults{grid-column:1/-1}@media(max-width:380px){.route-field .trip-input-row{grid-template-columns:minmax(0,1fr) 48px;gap:6px}.route-field .trip-input-row input{padding:10px 8px;font-size:13px}}
-</style></head>
+</style><style>.header-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.header-title h1{margin:0;flex:1;min-width:190px}#homeInstallButton{background:#334155;color:#fff;font-size:11px;padding:8px;white-space:nowrap;min-height:36px}#homeInstallDialog{width:calc(100% - 32px);max-width:390px;border:0;border-radius:16px;padding:22px;color:#16181d}#homeInstallDialog::backdrop{background:#11182799}#homeInstallDialog h3{margin:0 0 12px}#homeInstallGuide{font-size:14px;line-height:1.7}#homeInstallBrowser{background:#0f766e;color:white}header{padding-top:max(10px,env(safe-area-inset-top))}body{padding-bottom:env(safe-area-inset-bottom)}</style></head>
 <body>
-<header><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.18</small><span id="testServerBadge" hidden>TEST 서버</span></h1><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.19</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -1092,7 +1098,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.18',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.19',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
@@ -1211,4 +1217,4 @@ loadVehicleSettings();render();renderLocationCandidates(null,null);
 if(typeof document.readyState==='string')loadServerCatalog();
 </script>
 <script>if(!location.pathname.includes('nacs-map-test')){const beacon=document.createElement('script');beacon.type='module';beacon.src='https://static.cloudflareinsights.com/beacon.min.js';beacon.setAttribute('data-cf-beacon',JSON.stringify({token:'3699f902c53b430899c1a09f6c70e8e2'}));document.head.appendChild(beacon);}</script>
-</body></html>
+<script src="./pwa/install.js"></script></body></html>
