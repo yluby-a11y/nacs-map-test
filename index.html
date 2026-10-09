@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V2.20</title>
+<title>전국 NACS 충전지도 V2.21</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,7 +40,7 @@ a.naver{background:#03c75a;color:#fff}
 .recommend-ad{margin:16px 0 0;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;min-height:100px}.recommend-ad-label{font-size:10px;color:#64748b;margin-bottom:8px}.recommend-ad-demo{text-align:center;padding:16px;color:#64748b;font-size:12px}.recommend-ad ins{display:block;min-height:90px}
 .tesla-send-row{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;margin-top:8px;width:100%;box-sizing:border-box}.tesla-send-row select{flex:1 1 0;min-width:0;width:0;max-width:none;height:40px;box-sizing:border-box;text-overflow:ellipsis}.tesla-send-row button{flex:0 0 auto;white-space:nowrap;padding:10px 9px!important;font-size:12px!important;height:40px;box-sizing:border-box}@media(max-width:360px){.tesla-send-row{gap:4px}.tesla-send-row button{font-size:11px!important;padding:10px 6px!important}}
 .charger-scope-buttons{display:flex;gap:6px;margin:12px 0 8px}.scopebtn{background:#eef2f7!important;color:#334155!important;padding:8px 14px!important;border-radius:10px!important;font-size:13px!important}.scopebtn.active{background:#0f766e!important;color:white!important}
-</style>
+.favorite-source{margin-top:7px;color:#64748b;font-size:12px;line-height:1.5}.favorite-source a{color:#397570;text-decoration:underline}</style>
 <style>
 @keyframes recspin{to{transform:rotate(360deg)}}
 .rec-spinner{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:recspin .7s linear infinite;vertical-align:-2px;margin-right:6px}
@@ -59,7 +59,7 @@ a.naver{background:#03c75a;color:#fff}
 </style><style>.header-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.header-title h1{margin:0;flex:1;min-width:190px}#homeInstallButton{background:#334155;color:#fff;font-size:11px;padding:8px;white-space:nowrap;min-height:36px}#homeInstallDialog{width:calc(100% - 32px);max-width:390px;border:0;border-radius:16px;padding:22px;color:#16181d}#homeInstallDialog::backdrop{background:#11182799}#homeInstallDialog h3{margin:0 0 12px}#homeInstallGuide{font-size:14px;line-height:1.7}#homeInstallBrowser{background:#0f766e;color:white}header{padding-top:max(10px,env(safe-area-inset-top))}body{padding-bottom:env(safe-area-inset-bottom)}</style></head>
 <body>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.20</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V2.21</small><span id="testServerBadge" hidden>TEST 서버</span></h1><button id="homeInstallButton" type="button">홈화면에 추가</button></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -283,9 +283,9 @@ let catalogSource='loading',catalogLoadTask=null;
 async function loadServerCatalog(){
  if(catalogLoadTask)return catalogLoadTask;
  catalogLoadTask=(async()=>{try{
-  const get=async path=>{const r=await apiFetch(KAKAO_ROUTE_BASE+path,{timeoutMs:12000});if(!r.ok)throw Error('목록 응답 오류');return r.json();};
+  const get=async path=>{const r=await apiFetch(KAKAO_ROUTE_BASE+path+(path.includes('?')?'&':'?')+'collection=food-v221',{timeoutMs:12000});if(!r.ok)throw Error('목록 응답 오류');return r.json();};
   const meta=await get('/v1/catalog');if(!/^V\d+\.\d+$/.test(meta.version)||!Number.isInteger(meta.chargers)||meta.chargers<1||meta.chargers>1000||!Number.isInteger(meta.restaurants)||meta.restaurants<0||meta.restaurants>3000)throw Error('목록 버전 확인 필요');
-  const collect=async kind=>{const rows=[];let cursor='';for(let page=0;page<4;page++){const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));if(!Array.isArray(data.places))throw Error('목록 형식 오류');rows.push(...data.places);if(!data.nextCursor)return rows;if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;}throw Error('목록 초과');};
+  const collect=async kind=>{const rows=[];let cursor='';for(let page=0;page<15;page++){const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));if(!Array.isArray(data.places))throw Error('목록 형식 오류');rows.push(...data.places);if(!data.nextCursor)return rows;if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;}throw Error('목록 초과');};
   const [chargers,restaurants]=await Promise.all([collect('chargers'),collect('restaurants')]);
   if(chargers.length!==meta.chargers||restaurants.length!==meta.restaurants)throw Error('목록 개수 오류');
   chargers.sort((a,b)=>a.sourceIndex-b.sourceIndex);const nextItems=[],nextCoords={},nextNav={},nextQuality={},nextRoute={},nextVerification={};
@@ -863,7 +863,7 @@ function renderFavorites(){
  const markerSignature=document.getElementById('showFavorites').checked?JSON.stringify(favorites.map(f=>[f.id,f.name,f.lat,f.lon,f.address])):'';if(markerSignature!==favoriteMarkerSignature){favoriteMarkers.clearLayers();favoriteMarkerSignature=markerSignature;if(markerSignature)favorites.forEach((f,i)=>{if(Number.isFinite(f.lat)&&Number.isFinite(f.lon))mapUI.favoriteMarker([f.lat,f.lon],f.name).addTo(favoriteMarkers).bindPopup('<b>'+escapeHTML(f.name)+'</b><div class="actions">'+favoriteActions(f,i)+'</div>');});}
  visible.forEach(({f,i,distance})=>{const card=document.createElement('div');card.className='card favorite-card'+(selectedWaypoint&&selectedWaypoint.name===f.name?' selected':'');card.dataset.favoriteId=f.id;if(f.lat){card.dataset.lat=f.lat;card.dataset.lon=f.lon;card.dataset.coordSource=f.coordSource;}
  const distanceLabel=Number.isFinite(distance)?(foodScope==='route'?'경로에서 ':'')+distance.toFixed(1)+'km':'';
- card.innerHTML='<div class="row"><div class="name">'+escapeHTML(f.name)+'</div><span class="op">'+distanceLabel+'</span></div><div class="meta">'+escapeHTML(f.locationAddress||f.address)+'<br>'+favoriteBrief(f)+(favoriteOriginDistance(f)?'<br>'+favoriteOriginDistance(f):'')+'</div><div class="actions">'+favoriteActions(f,i)+'</div>';list.appendChild(card);
+ card.innerHTML='<div class="row"><div class="name">'+escapeHTML(f.name)+'</div><span class="op">'+distanceLabel+'</span></div><div class="meta">'+escapeHTML(f.locationAddress||f.address)+'<br>'+favoriteBrief(f)+(favoriteOriginDistance(f)?'<br>'+favoriteOriginDistance(f):'')+'<div class="favorite-source">'+favoriteSources(f)+'</div></div><div class="actions">'+favoriteActions(f,i)+'</div>';list.appendChild(card);
 
  });
  if(!visible.length){const empty=document.createElement('p');empty.className='meta';empty.textContent=foodScope==='route'&&!courseLine?context:'이 범위에 등록된 맛집이 없습니다. 범위를 넓히거나 다른 위치를 선택해 보세요.';list.appendChild(empty);}
@@ -976,7 +976,7 @@ let favoriteInfoRevision=0,favoriteInfoChoices=[],favoriteInfoIndex=-1;
 const placeInfoCache=new Map();
 function safePlaceURL(url){try{const u=new URL(url);if(!['https:','http:'].includes(u.protocol)||u.hostname!=='place.map.kakao.com'||!/^\/\d+\/?$/.test(u.pathname))return '';u.protocol='https:';return u.href;}catch(e){return '';}}
 function placeNameKey(s){return String(s||'').replace(/\s|[()|·]/g,'').toLowerCase();}
-function placeQueries(f){const tokens=(f.searchQuery||f.name).replace(/\|/g,' ').trim().split(/\s+/);return [...new Set([tokens.slice(0,2).join(' '),f.searchQuery||f.name])];}
+function placeQueries(f){if(f.searchQuery)return [f.searchQuery];const tokens=(f.searchQuery||f.name).replace(/\|/g,' ').trim().split(/\s+/);return [...new Set([tokens.slice(0,2).join(' '),f.searchQuery||f.name])];}
 async function lookupFavoritePlaces(f){
  const key=f.id||f.name+'|'+f.address;if(placeInfoCache.has(key))return placeInfoCache.get(key);
  const queries=placeQueries(f);let places=[];
@@ -1025,6 +1025,11 @@ function updateHeaderProgress(){
  const end=effectiveDestination(),ready=!!myPos&&!!end&&courseSafe();
  const stages=[['출발·목적지',!!myPos&&!!end,"document.getElementById('tripInputs').scrollIntoView({behavior:'smooth'})"],['충전소',!!selectedNearbyCharger,"goToStep('charging')"],['맛집',!!selectedWaypoint,"goToStep('food')"],['길찾기',ready,"goToStep('course')"]];
  document.getElementById('headerProgress').innerHTML=stages.map(([name,done,action],i)=>(i?'<span class="arrow" aria-hidden="true">›</span>':'')+'<button class="'+(done?'done':'')+'" aria-label="'+name+(done?(i===3?' 준비됨':' 선택됨'):' 미선택')+'" onclick="'+action.replace(/"/g,'&quot;')+'">'+(done?'✓ ':'')+name+'</button>').join('');
+}
+function favoriteSources(f){
+ const known={kakao:{owner:'광주 다니엘님',platform:'카카오맵',url:'https://kko.to/9027A8TFTd'},naver:{owner:'광주 지성님',platform:'네이버지도',url:'https://naver.me/5VAW5cv5'}};
+ const platforms=[...new Set((Array.isArray(f.sources)?f.sources:[{platform:'kakao'}]).map(s=>s.platform))].filter(key=>known[key]);
+ return '출처: '+platforms.map(key=>{const s=known[key];return escapeHTML(s.owner)+' · <a href="'+s.url+'" target="_blank" rel="noopener noreferrer">'+escapeHTML(s.platform)+'</a>';}).join(' / ');
 }
 function favoriteBrief(f){
  const explicit=f.menu||f.name.split(/\s+/).slice(2).filter(word=>/(정식|찌개|국밥|갈비|육회|막걸리|짬뽕|국수|냉면|피자|커피|돈까스|돈카츠|우동|제육|쌍화차|장어|게장|삼계탕)/.test(word)).join(' ');
@@ -1099,7 +1104,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.20',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V2.21',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
