@@ -10,7 +10,7 @@
   "env": {
     "staging": {
       "name": "nacs-map-api-test",
-      "workers_dev": true,
+      "workers_dev": false,
       "vars": {
         "DEPLOYMENT_ENV": "staging",
         "ALLOWED_ORIGINS": "https://yluby-a11y.github.io",
@@ -54,7 +54,8 @@
         "crons": [
           "0 18 * * *"
         ]
-      }
+      },
+      "preview_urls": false
     },
     "production": {
       "name": "nacs-map-api-prod",
