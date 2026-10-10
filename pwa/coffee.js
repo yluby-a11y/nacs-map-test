@@ -2,7 +2,7 @@ let coffeeBrand='all',coffeeRevision=0,coffeeController=null,coffeeRows=[],coffe
 const coffeeStatus=()=>document.getElementById('coffeeStatus');
 function coffeeKey(){const target=selectedTripStops().find(p=>!p.coffee)||dest;return JSON.stringify([myPos&&[myPos.lat,myPos.lon],target&&[target.lat,target.lon],selectedTripStops().filter(p=>!p.coffee).map(p=>[p.lat,p.lon]),routePriority,document.getElementById('coffeeDeparture').value,document.getElementById('batteryRange').value,coffeeBrand]);}
 function resetCoffee(){coffeeRevision++;coffeeController?.abort();coffeeController=null;coffeeRows=[];coffeeProof=null;document.getElementById('coffeeResults').innerHTML='';document.getElementById('coffeeRecommendButton').disabled=false;coffeeStatus().textContent='가까운 매장과 적은 우회 우선 · 비슷한 조건이면 DT 우선';}
-function coffeeChanged(){resetCoffee();coffeeStatus().textContent='조건이 바뀌었습니다. 커피 추천을 다시 눌러주세요.';}
+function coffeeChanged(){resetCoffee();coffeeStatus().textContent='조건이 바뀌었습니다. To Go 카페추천을 다시 눌러주세요.';}
 function coffeeTimeText(date){return new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(date));}
 function coffeeHourText(hours){if(!hours||hours.closed)return '';const text=minute=>(minute>=1440?'다음날 ':'')+String(Math.floor(minute%1440/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');return text(hours.open)+'–'+text(hours.close);}
 function coffeeInfoURL(p){if(/^https:\/\/(?:www\.starbucks\.co\.kr\/store\/store_map\.do\?in_biz_cd=\d+|place\.map\.kakao\.com\/\d+)$/.test(p.placeUrl||''))return p.placeUrl;return 'https://map.kakao.com/link/search/'+encodeURIComponent(p.name+' '+p.address);}
@@ -27,7 +27,7 @@ async function recommendCoffee(){
   const selected=selectedTripStops().filter(p=>!p.coffee),target=selected[0]||dest,key=coffeeKey(),point=p=>({lat:p.lat,lon:p.lon}),firstCharge=selected.findIndex(p=>p.kind==='charger');
   const r=await apiFetch(KAKAO_ROUTE_BASE+'/v1/coffee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:1,origin:point(myPos),destination:target?point(target):null,brand:coffeeBrand,priority:routePriority,rangeKm,departure:departure.toISOString(),...(firstCharge>=0?{stopsBeforeCharge:selected.slice(0,firstCharge+1).map(point)}:{})}),signal:controller.signal,timeoutMs:45000});
   if(!r.ok)throw Error(r.status===429?'커피 조회가 많습니다. 잠시 후 다시 눌러주세요.':r.status===400?'출발 시간과 주행가능거리를 확인해 주세요.':'커피 매장 조회에 연결하지 못했습니다. 다시 시도해 주세요.');const data=await r.json();
-  if(revision!==coffeeRevision)return;if(key!==coffeeKey()){coffeeStatus().textContent='조건이 바뀌었습니다. 커피 추천을 다시 눌러주세요.';return;}
+  if(revision!==coffeeRevision)return;if(key!==coffeeKey()){coffeeStatus().textContent='조건이 바뀌었습니다. To Go 카페추천을 다시 눌러주세요.';return;}
   if(!Array.isArray(data.places))throw Error('매장 정보를 확인하지 못했습니다.');coffeeRows=data.places;coffeeProof={key,at:Date.now()};
   coffeeStatus().textContent=(coffeeRows.length?coffeeRows.length+'곳'+(data.nearbyReference?' · 가까운 매장 참고입니다.':'')+' · 커피를 살 시간 10분을 고려했습니다.':'추천할 매장을 찾지 못했습니다.')+(data.closedCount?' · 예상 방문 시간에 영업하지 않는 '+data.closedCount+'곳 제외':'')+(data.detourExcludedCount?' · 우회가 큰 '+data.detourExcludedCount+'곳 제외':'')+(data.failedBrands?.length?' · 일부 브랜드 조회에 실패했습니다.':'');renderCoffee();
  }catch(e){if(revision===coffeeRevision&&e.name!=='AbortError')coffeeStatus().textContent=e.name==='TimeoutError'?'조회가 지연됩니다. 다시 시도해 주세요.':e.message||'위치 권한을 확인하거나 출발지를 검색해 주세요.';}
