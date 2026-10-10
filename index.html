@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V3.13</title>
+<title>전국 NACS 충전지도 V3.14</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -69,7 +69,7 @@ header{background:linear-gradient(120deg,#101c30,#112d35);box-shadow:0 3px 14px 
 <body>
 <dialog id="chromeOpenDialog" aria-labelledby="chromeOpenTitle"><h3 id="chromeOpenTitle">크롬에서 열기</h3><p id="chromeOpenGuide"></p><div class="actions"><a id="chromeOpenLink" class="btn" hidden>Chrome으로 열기</a><button id="chromeOpenClose" type="button">닫기</button></div></dialog>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.13</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()">코스 지도</button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.14</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()">코스 지도</button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -86,7 +86,7 @@ if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-pr
 <div class="route-field"><label for="origin">출발지</label><div class="trip-input-row"><input id="origin" placeholder="미선택 시 현재 위치"><button class="place-search" aria-label="출발지 검색" onclick="setOrigin()">검색</button></div><div id="originResults" style="display:none" aria-live="polite"></div></div>
 <div class="route-field"><label for="destination">목적지</label><div class="trip-input-row"><input id="destination" placeholder="장소 또는 주소 입력"><button class="place-search" aria-label="목적지 검색" onclick="setDestination()">검색</button></div><div id="destResults" style="display:none" aria-live="polite"></div></div>
 </div>
-<p id="routeInfo" class="input-guide">경로와 주행가능거리를 확인한 뒤, 지도 아래 충전소 추천을 눌러주세요.</p>
+<p id="routeInfo" class="input-guide">경로와 주행가능거리를 확인한 뒤, 아래 충전소 추천을 눌러주세요.</p>
 <section id="batteryInputs" class="range-settings"><div class="range-row"><label id="rangeInputLabel" for="batteryRange">현재 주행가능거리</label><div class="range-value"><input id="batteryRange" type="number" min="0" max="1500" placeholder="300" aria-describedby="batteryHelp"><span>km</span></div></div><div class="range-row"><label for="battery80Range">80% 충전 시 주행가능거리</label><div class="range-value"><input id="battery80Range" onchange="updateChargeCardRange()" type="number" min="1" max="1200" placeholder="예: 400" aria-describedby="vehicleSettingsStatus"><span>km</span></div></div><p class="input-guide" id="vehicleSettingsStatus" aria-live="polite">한 번 입력하면 이 기기에 저장됩니다.</p><p class="input-guide" id="batteryHelp" aria-live="polite">미입력 시 300km · 도착 여유 50km</p><input id="batteryMode" type="hidden" value="range"><input id="batterySoc" type="hidden"><input id="batteryFullRange" type="hidden"><input id="batteryReserve" type="hidden" value="50"></section>
 <input id="routePriority" type="hidden" value="RECOMMEND"><div id="routeChoices" class="route-choices" role="group" aria-label="주행 경로 선택"></div><p id="routePreviewStatus" class="input-guide" aria-live="polite">출발지와 목적지를 선택하면 경로를 비교할 수 있습니다.</p>
 
@@ -590,7 +590,7 @@ async function setDestination(){
   window._destCandidates=results;box.innerHTML=results.map((r,i)=>'<button data-lat="'+r.lat+'" data-lon="'+r.lon+'" onclick="chooseDestination('+i+')" style="display:block;width:100%;text-align:left;background:white;color:#111827;border-bottom:1px solid #e5e7eb;border-radius:0;padding:11px"><b>'+escapeHTML(r.name)+'</b><br><span style="font-size:11px;color:#64748b">'+escapeHTML(r.display)+'</span></button>').join('');
  }catch(e){if(sequence===destinationSearchSequence)box.innerHTML='<div style="padding:10px">'+escapeHTML(e.message)+' 잠시 후 다시 시도해 주세요.</div>';}
 }
-function chooseDestination(i){const r=window._destCandidates[i];if(!r)return;dest={lat:r.lat,lon:r.lon,name:r.name,address:r.address||r.display?.split(' · ').slice(1).join(' · ')||''};invalidateRecommendation();recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='block';document.getElementById('destination').value=r.name;document.getElementById('destResults').style.display='none';document.getElementById('routeInfo').style.display='block';document.getElementById('routeInfo').textContent='경로와 주행가능거리를 확인한 뒤, 지도 아래 충전소 추천을 눌러주세요.';if(destMarker)map.removeLayer(destMarker);destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup('목적지: '+escapeHTML(r.name));updateCourseRoute();render();renderWaypoint();renderFavorites();prepareRouteChoices();}
+function chooseDestination(i){const r=window._destCandidates[i];if(!r)return;dest={lat:r.lat,lon:r.lon,name:r.name,address:r.address||r.display?.split(' · ').slice(1).join(' · ')||''};invalidateRecommendation();recommendMode=false;lastRecommendedResults=[];document.getElementById('resultSort').style.display='block';document.getElementById('destination').value=r.name;document.getElementById('destResults').style.display='none';document.getElementById('routeInfo').style.display='block';document.getElementById('routeInfo').textContent='경로와 주행가능거리를 확인한 뒤, 아래 충전소 추천을 눌러주세요.';if(destMarker)map.removeLayer(destMarker);destMarker=mapUI.marker([dest.lat,dest.lon]).addTo(map).bindPopup('목적지: '+escapeHTML(r.name));updateCourseRoute();render();renderWaypoint();renderFavorites();prepareRouteChoices();}
 let lastRecommendedResults=[];
 let tripPreferences={mode:'range',rangeKm:300,socPercent:null,fullRangeKm:null,reserveKm:50,preferSupercharger:false};
 let resultSortMode="recommend",distanceSortDescending=false,chargerScope='all';
@@ -1158,7 +1158,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.13',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.14',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
@@ -1211,7 +1211,7 @@ function resetTrip(){selectExtrasTab('cafe');openRouteSettings();if(typeof reset
  document.querySelectorAll('[data-op]').forEach(el=>el.classList.toggle('active',el.dataset.op==='ALL'));
  tripPreferences={mode:'range',rangeKm:300,socPercent:null,fullRangeKm:null,reserveKm:50,preferSupercharger:false};
  document.getElementById('batteryMode').value='range';for(const id of ['batteryRange','batterySoc','batteryFullRange'])document.getElementById(id).value='';document.getElementById('batteryReserve').value='50';document.getElementById('battery80Range').value='';document.getElementById('preferSupercharger').checked=false;
- loadVehicleSettings();updateBatteryFields();document.getElementById('batteryHelp').textContent='미입력 시 300km · 도착 여유 50km';document.getElementById('routeInfo').textContent='경로와 주행가능거리를 확인한 뒤, 지도 아래 충전소 추천을 눌러주세요.';document.getElementById('routeInfo').style.display='block';document.getElementById('recommendHint').textContent='';
+ loadVehicleSettings();updateBatteryFields();document.getElementById('batteryHelp').textContent='미입력 시 300km · 도착 여유 50km';document.getElementById('routeInfo').textContent='경로와 주행가능거리를 확인한 뒤, 아래 충전소 추천을 눌러주세요.';document.getElementById('routeInfo').style.display='block';document.getElementById('recommendHint').textContent='';
  document.getElementById('planDeparture').value='';document.getElementById('planChargeStay').value='30';document.getElementById('planFoodStay').value='60';document.getElementById('scheduleOutput').innerHTML='';document.getElementById('scheduleStatus').textContent='현재 코스를 초기화했습니다. 저장한 일정은 유지됩니다.';document.getElementById('status').textContent='출발지와 목적지 또는 방문할 장소를 선택해 주세요.';
  render();renderFavorites();renderWaypoint();syncChargerScopeControls();document.getElementById('chargingPanel').open=false;
 }
@@ -1277,5 +1277,5 @@ loadVehicleSettings();render();renderLocationCandidates(null,null);
 if(typeof document.readyState==='string')loadServerCatalog();
 </script>
 <script>if(!location.pathname.includes('nacs-map-test')){const beacon=document.createElement('script');beacon.type='module';beacon.src='https://static.cloudflareinsights.com/beacon.min.js';beacon.setAttribute('data-cf-beacon',JSON.stringify({token:'3699f902c53b430899c1a09f6c70e8e2'}));document.head.appendChild(beacon);}</script>
-<script src="./pwa/coffee.js?v=3.13"></script>
-<script src="./pwa/install.js?v=3.13"></script><script src="./pwa/chrome-open.js?v=3.13"></script></body></html>
+<script src="./pwa/coffee.js?v=3.14"></script>
+<script src="./pwa/install.js?v=3.14"></script><script src="./pwa/chrome-open.js?v=3.14"></script></body></html>
