@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V3.11</title>
+<title>전국 NACS 충전지도 V3.12</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -65,11 +65,11 @@ header{background:linear-gradient(120deg,#101c30,#112d35);box-shadow:0 3px 14px 
 .header-progress{gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff14}.header-progress nav{flex-wrap:nowrap;gap:4px;min-width:0}.header-progress nav button{flex:1;padding:8px 3px;font-size:11px;border-radius:8px;background:#ffffff0b;color:#c9d7df;white-space:nowrap}.header-progress nav button.done{background:#14756b;color:#fff}.header-progress .arrow{font-size:10px;color:#6f929d}.header-progress>button{background:transparent;border:1px solid #ffffff20;padding:8px 7px;color:#aabfc9;border-radius:8px;font-size:11px}
 @media(min-width:760px){.header-title{grid-template-columns:1fr auto}.header-tools{min-width:300px}}
 @media(max-width:360px){.header-title h1{font-size:15px;gap:4px}.header-progress nav button{font-size:10px}.header-progress{gap:5px}.header-progress>button{font-size:10px;padding:8px 5px}}
-</style></head>
+</style><style>.route-recommend-actions{padding:0}.cafe-card-section .coffee-panel{margin:0;padding:0;border:0}#recommendAgainButton{margin-top:10px;background:#edf5f3;color:#17695d;border:1px solid #cde4de;font-size:12px}.header-tools #courseMapButton{background:#ffffff0c;color:#d4e3e8;border:1px solid #ffffff20;flex:.8}#courseMapDialog{padding:0;width:calc(100% - 24px);max-width:960px;height:80dvh;max-height:calc(100dvh - 24px);border:0;border-radius:18px;overflow:hidden;background:#fff}#courseMapDialog::backdrop{background:#081623b3}.course-map-heading{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}.course-map-heading h2{font-size:17px;margin:0}.course-map-heading button{background:#edf2f5;color:#334155;min-height:36px}.course-map-heading+#mapPanel{margin:0;border:0;border-radius:0}#mapPanelTitle{display:none}#courseMapDialog #map{height:calc(80dvh - 116px);min-height:180px}#courseMapDialog .map-display{padding:10px}.header-tools button{font-size:11px!important}</style></head>
 <body>
 <dialog id="chromeOpenDialog" aria-labelledby="chromeOpenTitle"><h3 id="chromeOpenTitle">크롬에서 열기</h3><p id="chromeOpenGuide"></p><div class="actions"><a id="chromeOpenLink" class="btn" hidden>Chrome으로 열기</a><button id="chromeOpenClose" type="button">닫기</button></div></dialog>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.11</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="chromeOpenButton" type="button">오류 시 크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.12</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()">코스 지도</button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -90,10 +90,11 @@ if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-pr
 <section id="batteryInputs" class="range-settings"><div class="range-row"><label id="rangeInputLabel" for="batteryRange">현재 주행가능거리</label><div class="range-value"><input id="batteryRange" type="number" min="0" max="1500" placeholder="300" aria-describedby="batteryHelp"><span>km</span></div></div><div class="range-row"><label for="battery80Range">80% 충전 시 주행가능거리</label><div class="range-value"><input id="battery80Range" onchange="updateChargeCardRange()" type="number" min="1" max="1200" placeholder="예: 400" aria-describedby="vehicleSettingsStatus"><span>km</span></div></div><p class="input-guide" id="vehicleSettingsStatus" aria-live="polite">한 번 입력하면 이 기기에 저장됩니다.</p><p class="input-guide" id="batteryHelp" aria-live="polite">미입력 시 300km · 도착 여유 50km</p><input id="batteryMode" type="hidden" value="range"><input id="batterySoc" type="hidden"><input id="batteryFullRange" type="hidden"><input id="batteryReserve" type="hidden" value="50"></section>
 <input id="routePriority" type="hidden" value="RECOMMEND"><div id="routeChoices" class="route-choices" role="group" aria-label="주행 경로 선택"></div><p id="routePreviewStatus" class="input-guide" aria-live="polite">출발지와 목적지를 선택하면 경로를 비교할 수 있습니다.</p>
 
-</div></details>
+<div class="route-recommend-actions"><button id="recommendBtn" disabled onclick="recommendSort()">충전소 추천</button><div id="status" hidden aria-live="polite"></div><p id="recommendHint" class="input-guide" aria-live="polite"></p><aside id="outboundAd" class="recommend-ad" aria-label="광고" hidden></aside></div></div></details><button id="recommendAgainButton" type="button" hidden onclick="openRouteSettings();recommendSort()">충전소 다시 추천</button></section><section class="trip-input cafe-card-section">
 <details id="coffeePanel" class="coffee-panel"><summary>☕ 출발 전 커피</summary><div class="coffee-controls"><label for="coffeeDeparture">출발 시간</label><input id="coffeeDeparture" type="datetime-local"><p class="input-guide">미입력 시 지금 출발 · 한국 시간 기준</p><div class="coffee-brands" role="group" aria-label="커피 브랜드"><button type="button" data-coffee-brand="all" aria-pressed="true">전체</button><button type="button" data-coffee-brand="starbucks" aria-pressed="false">스타벅스</button><button type="button" data-coffee-brand="mega" aria-pressed="false">메가</button><button type="button" data-coffee-brand="compose" aria-pressed="false">컴포즈</button><button type="button" data-coffee-brand="heiky" aria-pressed="false">헤이키</button></div><button id="coffeeRecommendButton" type="button">To Go 카페추천</button></div><p id="coffeeStatus" class="input-guide" aria-live="polite">가까운 매장과 적은 우회 우선 · 비슷한 조건이면 DT 우선</p><div id="coffeeResults"></div></details>
-</section><details id="mapPanel" class="step-panel map-panel"><summary id="mapPanelTitle">지도 보기</summary><div id="map"></div><div class="map-display" role="group" aria-label="지도 표시"><span>지도 표시</span><button id="chargerMapToggle" class="map-toggle active" aria-pressed="true" onclick="toggleMapPlaces('charger')">충전소</button><button id="foodMapToggle" class="map-toggle" aria-pressed="false" onclick="toggleMapPlaces('food')">맛집</button></div></details><div class="route-recommend-actions"><button id="recommendBtn" disabled onclick="recommendSort()">충전소 추천</button><div id="status" hidden aria-live="polite"></div><p id="recommendHint" class="input-guide" aria-live="polite"></p><aside id="outboundAd" class="recommend-ad" aria-label="광고" hidden></aside></div>
+</section>
 
+<dialog id="courseMapDialog" aria-labelledby="courseMapTitle"><div class="course-map-heading"><h2 id="courseMapTitle">코스 지도</h2><button type="button" onclick="closeCourseMap()" aria-label="코스 지도 닫기">닫기</button></div><details id="mapPanel" class="step-panel map-panel"><summary id="mapPanelTitle">지도 보기</summary><div id="map"></div><div class="map-display" role="group" aria-label="지도 표시"><span>지도 표시</span><button id="chargerMapToggle" class="map-toggle active" aria-pressed="true" onclick="toggleMapPlaces('charger')">충전소</button><button id="foodMapToggle" class="map-toggle" aria-pressed="false" onclick="toggleMapPlaces('food')">맛집</button></div></details></dialog>
 <input id="search" type="hidden" value="">
 <details id="chargingPanel" class="step-panel"><summary class="charger-heading"><span id="chargingSummary">1. 충전소</span><div id="resultSort" style="display:block" aria-label="충전소 정렬">
   <div class="charger-sort-buttons">
@@ -141,7 +142,11 @@ const mapUI=(()=>{
 
 const map=mapUI.map('map').setView([36.2,127.8],7);
 const mapPanel=document.getElementById('mapPanel');mapPanel.addEventListener('toggle',()=>{document.getElementById('mapPanelTitle').textContent=mapPanel.open?'지도 접기':'지도 보기';if(mapPanel.open)map.relayout();});
-function revealMap(){mapPanel.open=true;map.relayout();if(mapPanel.scrollIntoView)mapPanel.scrollIntoView({behavior:'smooth',block:'start'});}
+const courseMapDialog=document.getElementById('courseMapDialog');let courseMapTrigger=null;
+function revealMap(){courseMapTrigger=document.activeElement;if(!courseMapDialog.open){if(typeof courseMapDialog.showModal==='function')courseMapDialog.showModal();else courseMapDialog.open=true;}mapPanel.open=true;map.relayout();}
+function closeCourseMap(){if(typeof courseMapDialog.close==='function')courseMapDialog.close();else courseMapDialog.open=false;}
+courseMapDialog.addEventListener('close',()=>{mapPanel.open=false;if(courseMapTrigger?.isConnected&&typeof courseMapTrigger.focus==='function')courseMapTrigger.focus({preventScroll:true});});
+
 
 let showChargerMarkers=true;
 const markers=mapUI.layerGroup().addTo(map);
@@ -741,8 +746,8 @@ async function serverRecommendation(kind,extra={}){
  const task=(async()=>{const r=await apiFetch(KAKAO_ROUTE_BASE+'/v1/recommendations',{method:'POST',headers:{'Content-Type':'application/json'},body:key,timeoutMs:70000});if(!r.ok){const retry=r.headers.get('Retry-After');throw Object.assign(Error(r.status===429?(retry?'반복 요청이 많아 잠시 제한되었습니다. '+Math.ceil(Number(retry)/60)+'분 후 다시 시도해 주세요.':'서버 이용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.'):'추천 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'),{status:r.status});}const data=await r.json();if(data.version!==1||!Array.isArray(data.results))throw Error('추천 응답 형식을 확인하지 못했습니다.');const json=JSON.stringify(data);if(!data.failedQueries){recommendationMemo.set(key,{time:Date.now(),json});while(recommendationMemo.size>12)recommendationMemo.delete(recommendationMemo.keys().next().value);}return json;})();recommendationRequests.set(key,task);try{return JSON.parse(await task);}finally{recommendationRequests.delete(key);}
 }
 
-function openRouteSettings(){document.getElementById('routeSettings').open=true;document.getElementById('routeSettingsSummary').hidden=true;}
-function collapseRouteSettings(){const summary=document.getElementById('routeSettingsSummary');summary.textContent=(myPos?.name||'현재 위치')+' → '+(dest?.name||document.getElementById('destination').value)+' · 주행가능거리 '+(document.getElementById('batteryRange').value||'300')+'km · '+routePriorityLabel();summary.hidden=false;document.getElementById('routeSettings').open=false;}
+function openRouteSettings(){document.getElementById('recommendAgainButton').hidden=true;document.getElementById('routeSettings').open=true;document.getElementById('routeSettingsSummary').hidden=true;}
+function collapseRouteSettings(){document.getElementById('recommendAgainButton').hidden=false;const summary=document.getElementById('routeSettingsSummary');summary.textContent=(myPos?.name||'현재 위치')+' → '+(dest?.name||document.getElementById('destination').value)+' · 주행가능거리 '+(document.getElementById('batteryRange').value||'300')+'km · '+routePriorityLabel();summary.hidden=false;document.getElementById('routeSettings').open=false;}
 async function recommendSortCore(){openRouteSettings();
  const revision=recommendationRevision;
  const statusEl=document.getElementById('status');statusEl.hidden=false;
@@ -1151,7 +1156,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.11',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.12',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
@@ -1270,5 +1275,5 @@ loadVehicleSettings();render();renderLocationCandidates(null,null);
 if(typeof document.readyState==='string')loadServerCatalog();
 </script>
 <script>if(!location.pathname.includes('nacs-map-test')){const beacon=document.createElement('script');beacon.type='module';beacon.src='https://static.cloudflareinsights.com/beacon.min.js';beacon.setAttribute('data-cf-beacon',JSON.stringify({token:'3699f902c53b430899c1a09f6c70e8e2'}));document.head.appendChild(beacon);}</script>
-<script src="./pwa/coffee.js?v=3.11"></script>
-<script src="./pwa/install.js?v=3.11"></script><script src="./pwa/chrome-open.js?v=3.11"></script></body></html>
+<script src="./pwa/coffee.js?v=3.12"></script>
+<script src="./pwa/install.js?v=3.12"></script><script src="./pwa/chrome-open.js?v=3.12"></script></body></html>
