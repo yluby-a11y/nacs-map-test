@@ -11,7 +11,13 @@
     const url = new URL('../', document.querySelector('link[rel="manifest"]').href);
     return 'intent://' + url.host + url.pathname + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url.href) + ';end';
   }
-  const update = () => { button.hidden = installed(); };
+  const update = () => {
+    const appMode = installed();
+    button.hidden = appMode;
+    document.getElementById('chromeOpenButton').hidden = appMode;
+    document.documentElement.classList.toggle('installed-app', appMode);
+    document.getElementById('courseMapButton').textContent = appMode ? '지도 보기' : '코스 지도';
+  };
   update();
   standalone.addEventListener?.('change', update);
   window.addEventListener('beforeinstallprompt', event => {
