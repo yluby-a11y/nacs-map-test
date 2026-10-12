@@ -1,3 +1,6 @@
+// Runs after the panel exists, including installed app launches at the host root.
+const parkingTestSite=location.hostname==='nacs-map-preview.hoy-kim.workers.dev'||location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname);
+document.getElementById('parkingPanel').hidden=!parkingTestSite;
 let parkingRequestRevision=0,parkingDestinationSignature='';
 function refreshParkingDestination(){
  const signature=dest?JSON.stringify([dest.lat,dest.lon,dest.name]):'';
