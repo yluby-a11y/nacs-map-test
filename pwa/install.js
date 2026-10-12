@@ -16,7 +16,7 @@
     button.hidden = appMode;
     document.getElementById('chromeOpenButton').hidden = appMode;
     document.documentElement.classList.toggle('installed-app', appMode);
-    document.getElementById('courseMapButton').textContent = appMode ? '지도 보기' : '코스 지도';
+    document.getElementById('courseMapButtonLabel').textContent = appMode ? '지도 보기' : '코스 지도';
   };
   update();
   standalone.addEventListener?.('change', update);
