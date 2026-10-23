@@ -1,5 +1,5 @@
 function attachChargerStatus(card,index){
- if(location.hostname!=='nacs-map-preview.hoy-kim.workers.dev')return;
+ if(location.hostname!=='nacs-map-preview.hoy-kim.workers.dev'&&!(location.hostname==='yluby-a11y.github.io'&&/^\/nacs-map(?:-test)?(?:\/|$)/.test(location.pathname)))return;
  const button=document.createElement('button');button.type='button';button.className='locate';button.textContent='충전기 상태 보기';button.setAttribute('aria-expanded','false');
  const panel=document.createElement('section');panel.hidden=true;panel.className='meta';panel.setAttribute('aria-live','polite');
  (card.querySelector('.actions')||card).appendChild(button);card.appendChild(panel);
