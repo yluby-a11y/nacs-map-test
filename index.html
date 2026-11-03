@@ -288,7 +288,16 @@ async function verifiedSession(){
   let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='margin:0 10px;background:white;border-radius:10px;';document.querySelector('header').insertAdjacentElement('afterend',panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인이 필요합니다.';message.hidden=true;panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
   try{
    if(!window.turnstile)await new Promise((resolve,reject)=>{let script=document.getElementById('turnstileLoader');if(!script){script=document.createElement('script');script.id='turnstileLoader';script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';document.head.appendChild(script);}script.addEventListener('load',resolve,{once:true});script.addEventListener('error',()=>reject(Error('보안 확인에 연결하지 못했습니다.')),{once:true});setTimeout(()=>reject(Error('보안 확인 시간이 초과됐습니다. 새로고침해 주세요.')),15000);});
-   const challenge=await new Promise((resolve,reject)=>{let widget;const timeout=setTimeout(()=>{if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인을 완료하지 못했습니다. 새로고침해 주세요.'));},120000);widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',appearance:'interaction-only','before-interactive-callback':()=>{message.hidden=false;panel.style.padding='12px';},'after-interactive-callback':()=>{message.hidden=true;panel.style.padding='0';},callback:token=>{clearTimeout(timeout);window.turnstile.remove(widget);resolve(token);},'error-callback':()=>{clearTimeout(timeout);if(widget!==undefined)window.turnstile.remove(widget);reject(Error('보안 확인에 실패했습니다. 새로고침해 주세요.'));}});});
+   const challenge=await new Promise((resolve,reject)=>{
+    let widget,finished=false,retryTimer=null,failures=0;
+    const finish=(error,token)=>{if(finished)return;finished=true;clearTimeout(timeout);clearTimeout(retryTimer);if(widget!==undefined)setTimeout(()=>{try{window.turnstile.remove(widget);}catch{}},0);error?reject(error):resolve(token);};
+    const timeout=setTimeout(()=>finish(Error('보안 확인 시간이 초과됐습니다. 다시 시도해 주세요.')),120000);
+    try{widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',appearance:'interaction-only',retry:'never',
+     'before-interactive-callback':()=>{message.hidden=false;panel.style.padding='12px';},'after-interactive-callback':()=>{message.hidden=true;panel.style.padding='0';},
+     callback:token=>finish(null,token),
+     'error-callback':code=>{if(finished)return true;if(++failures===1&&/^(200500|300|600)/.test(String(code))){message.textContent='보안 연결을 다시 확인하고 있습니다…';message.hidden=false;retryTimer=setTimeout(()=>{if(!finished){try{window.turnstile.reset(widget);}catch{finish(Error('보안 확인을 다시 시작하지 못했습니다.'));}}},1000);return true;}finish(Error('보안 확인에 실패했습니다. 다시 시도해 주세요.'));return true;}
+    });}catch(e){finish(e);}
+   });
    const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenge}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('보안 확인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');apiSession=await r.json();return apiSession.token;
   }finally{panel.remove();}
  })();try{return await apiSessionPending;}finally{apiSessionPending=null;}
