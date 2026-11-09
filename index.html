@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V3.42</title>
+<title>전국 NACS 충전지도 V3.43</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest" crossorigin="use-credentials">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -79,7 +79,7 @@ header{background:linear-gradient(120deg,#101c30,#112d35);box-shadow:0 3px 14px 
 <body>
 <dialog id="chromeOpenDialog" aria-labelledby="chromeOpenTitle"><h3 id="chromeOpenTitle">크롬에서 열기</h3><p id="chromeOpenGuide"></p><div class="actions"><a id="chromeOpenLink" class="btn" hidden>Chrome으로 열기</a><button id="chromeOpenClose" type="button">닫기</button></div></dialog>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.42</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.43</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -358,45 +358,96 @@ async function apiFetch(input,options={}){
 
 let lastServerLocationCandidates=[];
 let catalogSource='loading',catalogLoadTask=null,catalogError='';
+let mapChargersReady=false,foodReceived=0,foodExpected=null;
 async function loadServerCatalog(){
  if(catalogSource==='d1')return 'd1';
  if(catalogLoadTask)return catalogLoadTask;
- catalogSource='loading';catalogError='';syncMapCatalogStatus();
+ catalogSource='loading';catalogError='';foodReceived=0;foodExpected=null;syncMapCatalogStatus();
  catalogLoadTask=(async()=>{const started=Date.now();let requestCount=0;try{
-  const get=async path=>{for(let attempt=0;attempt<2;attempt++){try{
+  const get=async (path,read=r=>r.json())=>{for(let attempt=0;attempt<2;attempt++){try{
    requestCount++;const r=await apiFetch(KAKAO_ROUTE_BASE+path+(path.includes('?')?'&':'?')+'collection=food-v35',{timeoutMs:20000});
-   if(!r.ok)throw Object.assign(Error(r.status===429?'요청이 많습니다. 잠시 후 다시 시도해 주세요.':'목록 응답 오류'),{status:r.status});return await r.json();
+   if(!r.ok)throw Object.assign(Error(r.status===429?'요청이 많습니다. 잠시 후 다시 시도해 주세요.':'목록 응답 오류'),{status:r.status});return await read(r);
   }catch(e){if(attempt||(/보안|로그인/.test(e.message||''))||(e.status&&e.status<500))throw e;await new Promise(resolve=>setTimeout(resolve,500));}}};
-  const snapshot=KAKAO_ROUTE_BASE.endsWith('/preview-api')?await get('/v1/catalog-snapshot'):null;
   const validateMeta=meta=>{if(!meta||!/^V\d+\.\d+$/.test(meta.version)||!Number.isInteger(meta.chargers)||meta.chargers<1||meta.chargers>1000||!Number.isInteger(meta.restaurants)||meta.restaurants<0||meta.restaurants>3000)throw Error('목록 버전 확인 필요');return meta;};
-  let meta=validateMeta(snapshot?snapshot.meta:await get('/v1/catalog'));
-  const collect=async kind=>{const rows=[];let cursor='';for(let page=0;page<15;page++){const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));if(!Array.isArray(data.places))throw Error('목록 형식 오류');rows.push(...data.places);if(!data.nextCursor)return rows;if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;}throw Error('목록 초과');};
-  const readPages=()=>Promise.all([collect('chargers'),collect('restaurants')]);
-  let [chargers,restaurants]=snapshot?[snapshot.chargers,snapshot.restaurants]:await readPages();
-  if(!Array.isArray(chargers)||!Array.isArray(restaurants))throw Error('목록 형식 오류');
-  // An insert can commit between the metadata request and the last page.
-  // Restart once only if the server confirms that the advertised counts changed.
-  if(!snapshot&&(chargers.length!==meta.chargers||restaurants.length!==meta.restaurants)){
-   const latest=validateMeta(await get('/v1/catalog'));
-   if(latest.chargers!==meta.chargers||latest.restaurants!==meta.restaurants){
-    meta=latest;
-    [chargers,restaurants]=await readPages();
+  function setFoodProgress(received,total){foodReceived=received;foodExpected=total;syncMapCatalogStatus();}
+  function publishChargers(chargers,expected){
+   if(!Array.isArray(chargers)||chargers.length!==expected)throw Error('충전소 개수 오류');
+   chargers.sort((a,b)=>a.sourceIndex-b.sourceIndex);const nextItems=[],nextCoords={},nextNav={},nextQuality={},nextRoute={},nextVerification={};
+   for(let i=0;i<chargers.length;i++){const p=chargers[i];if(p.sourceIndex!==i||p.kind!=='charger'||typeof p.name!=='string')throw Error('충전소 목록 오류');
+    const {id,sourceIndex,kind,location,navigationLocation,coordinateQuality,verification,recommendationLocation,navigationVerified,...item}=p;
+    nextItems.push(item);if(location)nextCoords[i]=location;if(navigationLocation)nextNav[i]=navigationLocation;nextQuality[i]=coordinateQuality;if(verification)nextVerification[i]=verification;
+    if(recommendationLocation&&JSON.stringify(recommendationLocation)!==JSON.stringify(location))nextRoute[i]=recommendationLocation;
+   }
+   // Startup only: preserve any location correction already made by this user.
+   for(const i of Object.keys(coordQuality)){if(coordQuality[i]==='user_kakao'){nextItems[i]=items[i];nextCoords[i]=coords[i];nextNav[i]=navCoords[i];nextQuality[i]=coordQuality[i];nextVerification[i]=chargerVerification[i];}}
+   items.splice(0,items.length,...nextItems);
+   for(const [target,source]of [[coords,nextCoords],[navCoords,nextNav],[coordQuality,nextQuality],[routeCoords,nextRoute],[chargerVerification,nextVerification]]){for(const k of Object.keys(target))delete target[k];Object.assign(target,source);}
+   mapChargersReady=true;render();syncMapCatalogStatus();
+  }
+  async function loadPreview(response){
+   if(!response.headers?.get('Content-Type')?.includes('application/x-ndjson')){
+    const snapshot=await response.json(),meta=validateMeta(snapshot.meta);
+    if(!Array.isArray(snapshot.restaurants)||snapshot.restaurants.length!==meta.restaurants)throw Error('맛집 개수 오류');
+    publishChargers(snapshot.chargers,meta.chargers);return snapshot.restaurants;
+   }
+   const reader=response.body.getReader(),decoder=new TextDecoder(),restaurants=[];
+   let pending='',meta=null;
+   try{
+    for(;;){
+     const {done,value}=await reader.read();
+     pending+=decoder.decode(value,{stream:!done});
+     let newline;
+     while((newline=pending.indexOf('\n'))!==-1){
+      const group=JSON.parse(pending.slice(0,newline));pending=pending.slice(newline+1);
+      if(!meta){meta=validateMeta(group.meta);setFoodProgress(0,meta.restaurants);publishChargers(group.chargers,meta.chargers);}
+      else{
+       if(!Array.isArray(group.restaurants)||group.restaurants.length>200||restaurants.length+group.restaurants.length>meta.restaurants)throw Error('맛집 목록 오류');
+       restaurants.push(...group.restaurants);setFoodProgress(restaurants.length,meta.restaurants);
+      }
+     }
+     if(done)break;
+    }
+    if(pending||!meta||restaurants.length!==meta.restaurants)throw Error('목록 개수 오류');
+    return restaurants;
+   }catch(error){await reader.cancel().catch(()=>{});throw error;}finally{reader.releaseLock();}
+  }
+  async function loadPages(){
+   const collect=async(kind,meta)=>{
+    const rows=[];let cursor='';
+    for(let page=0;page<15;page++){
+     const data=await get('/v1/'+kind+'?limit=200'+(cursor?'&cursor='+encodeURIComponent(cursor):''));
+     if(!Array.isArray(data.places)||data.places.length>200)throw Error('목록 형식 오류');
+     rows.push(...data.places);
+     if(kind==='restaurants')setFoodProgress(rows.length,meta.restaurants);
+     if(!data.nextCursor){
+      if(kind==='chargers'&&rows.length===meta.chargers)publishChargers(rows,meta.chargers);
+      return rows;
+     }
+     if(data.nextCursor===cursor)throw Error('목록 반복');cursor=data.nextCursor;
+    }
+    throw Error('목록 초과');
+   };
+   let meta=validateMeta(await get('/v1/catalog'));
+   for(let pass=0;pass<2;pass++){
+    setFoodProgress(0,meta.restaurants);
+    // Drain both tasks before starting a retry, so an older page cannot overwrite progress.
+    const results=await Promise.allSettled([collect('chargers',meta),collect('restaurants',meta)]);
+    for(const result of results)if(result.status==='rejected')throw result.reason;
+    const [chargers,restaurants]=results.map(r=>r.value);
+    if(chargers.length===meta.chargers&&restaurants.length===meta.restaurants)return restaurants;
+    if(pass===0){
+     const latest=validateMeta(await get('/v1/catalog'));
+     if(latest.chargers!==meta.chargers||latest.restaurants!==meta.restaurants){meta=latest;continue;}
+    }
+    throw Error('목록 개수 오류');
    }
   }
-  if(chargers.length!==meta.chargers||restaurants.length!==meta.restaurants)throw Error('목록 개수 오류');
-  chargers.sort((a,b)=>a.sourceIndex-b.sourceIndex);const nextItems=[],nextCoords={},nextNav={},nextQuality={},nextRoute={},nextVerification={};
-  for(let i=0;i<chargers.length;i++){const p=chargers[i];if(p.sourceIndex!==i||p.kind!=='charger'||typeof p.name!=='string')throw Error('충전소 목록 오류');
-   const {id,sourceIndex,kind,location,navigationLocation,coordinateQuality,verification,recommendationLocation,navigationVerified,...item}=p;
-   nextItems.push(item);if(location)nextCoords[i]=location;if(navigationLocation)nextNav[i]=navigationLocation;nextQuality[i]=coordinateQuality;if(verification)nextVerification[i]=verification;
-   if(recommendationLocation&&JSON.stringify(recommendationLocation)!==JSON.stringify(location))nextRoute[i]=recommendationLocation;
-  }
-  const byId=new Map(restaurants.map(p=>[p.sourceId,p]));if(byId.size!==restaurants.length)throw Error('맛집 목록 중복');
-  const nextFavorites=restaurants.map(p=>{if(p.kind!=='restaurant')throw Error('맛집 목록 오류');const {id,sourceId,kind,...item}=p;return {...item,id:sourceId};});
-  // Startup only: preserve any location correction already made by this user.
-  for(const i of Object.keys(coordQuality)){if(coordQuality[i]==='user_kakao'){nextItems[i]=items[i];nextCoords[i]=coords[i];nextNav[i]=navCoords[i];nextQuality[i]=coordQuality[i];nextVerification[i]=chargerVerification[i];}}
-  items.splice(0,items.length,...nextItems);favorites.splice(0,favorites.length,...nextFavorites);
-  for(const [target,source]of [[coords,nextCoords],[navCoords,nextNav],[coordQuality,nextQuality],[routeCoords,nextRoute],[chargerVerification,nextVerification]]){for(const k of Object.keys(target))delete target[k];Object.assign(target,source);}
-  catalogSource='d1';catalogError='';const status=document.getElementById('status');if(status.dataset.catalogSource==='error'){status.textContent='';status.hidden=true;}render();renderFavorites();renderWaypoint();
+  const restaurants=KAKAO_ROUTE_BASE.endsWith('/preview-api')?await get('/v1/catalog-snapshot?format=progress',loadPreview):await loadPages();
+  const byId=new Set(restaurants.map(p=>p.sourceId));
+  if(byId.size!==restaurants.length||restaurants.some(p=>!p.sourceId||p.kind!=='restaurant'))throw Error('맛집 목록 오류');
+  const nextFavorites=restaurants.map(p=>{const {id,sourceId,kind,...item}=p;return {...item,id:sourceId};});
+  favorites.splice(0,favorites.length,...nextFavorites);
+  catalogSource='d1';catalogError='';const status=document.getElementById('status');if(status.dataset.catalogSource==='error'){status.textContent='';status.hidden=true;}renderFavorites();renderWaypoint();
  }catch(e){catalogSource='error';catalogError=/보안|로그인|요청이 많습니다/.test(e.message||'')?e.message:'장소 목록 연결이 지연됐습니다.';document.getElementById('status').hidden=false;document.getElementById('status').textContent=catalogError+' 충전소 추천을 누르면 다시 연결합니다.';}document.getElementById('status').dataset.catalogSource=catalogSource;document.getElementById('status').dataset.catalogLoadMs=String(Date.now()-started);document.getElementById('status').dataset.catalogRequests=String(requestCount);syncMapCatalogStatus();return catalogSource;})();
  // Cache only an in-flight request. A rejected startup must not poison later retries.
  try{return await catalogLoadTask;}finally{catalogLoadTask=null;}
@@ -1003,7 +1054,12 @@ function syncMapCatalogStatus(){
  }
  const ready=catalogSource==='d1',foodOn=document.getElementById('showFavorites').checked;
  retry.hidden=ready||catalogSource==='loading';retry.disabled=false;retry.textContent='목록 다시 연결';
- message.textContent=ready?(showChargerMarkers?'충전소 표시 켜짐':'충전소 표시 꺼짐')+' · '+(foodOn?'맛집 표시 켜짐':'맛집은 아래 버튼을 눌러 표시'):(catalogSource==='loading'?'충전소·맛집 목록을 불러오고 있습니다. 지도 배경과 별도로 연결됩니다.':(catalogError||'장소 목록에 연결하지 못했습니다.')+' 충전소·맛집 표시를 위해 다시 연결해 주세요.');
+ const chargerStatus=showChargerMarkers?'충전소 표시 켜짐':'충전소 표시 꺼짐';
+ if(ready){message.textContent=chargerStatus+' · '+(foodOn?'맛집 표시 켜짐':'맛집은 아래 버튼을 눌러 표시');return;}
+ if(catalogSource==='error'){message.textContent=(mapChargersReady?chargerStatus+' · ':'')+(catalogError||'장소 목록에 연결하지 못했습니다.');return;}
+ if(foodExpected===null){message.textContent=mapChargersReady?chargerStatus+' · 맛집 목록 다시 연결 중…':'충전소·맛집 목록을 불러오고 있습니다…';return;}
+ const progress=foodReceived>foodExpected?'맛집 목록 변경 확인 중…':'맛집 '+foodReceived.toLocaleString('ko-KR')+' / '+foodExpected.toLocaleString('ko-KR')+'곳 불러오는 중…';
+ message.textContent=(mapChargersReady?chargerStatus:'충전소 불러오는 중…')+' · '+progress;
 }
 async function retryMapCatalog(){
  const panel=document.getElementById('apiVerification');
@@ -1272,7 +1328,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.42',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.43',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
