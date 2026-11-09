@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V3.39</title>
+<title>전국 NACS 충전지도 V3.40</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -67,11 +67,19 @@ header{background:linear-gradient(120deg,#101c30,#112d35);box-shadow:0 3px 14px 
 @media(max-width:360px){.header-title h1{font-size:15px;gap:4px}.header-progress nav button{font-size:10px}.header-progress{gap:5px}.header-progress>button{font-size:10px;padding:8px 5px}}
 </style><style>.route-recommend-actions{padding:0}.cafe-card-section .coffee-panel{margin:0;padding:0;border:0}#recommendAgainButton{margin-top:10px;background:#edf5f3;color:#17695d;border:1px solid #cde4de;font-size:12px}.header-tools #courseMapButton{background:#ffffff0c;color:#d4e3e8;border:1px solid #ffffff20;flex:.8}#courseMapDialog{padding:0;width:calc(100% - 24px);max-width:960px;height:80dvh;max-height:calc(100dvh - 24px);border:0;border-radius:18px;overflow:hidden;background:#fff}#courseMapDialog::backdrop{background:#081623b3}.course-map-heading{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}.course-map-heading h2{font-size:17px;margin:0}.course-map-heading button{background:#edf2f5;color:#334155;min-height:36px}.course-map-heading+#mapPanel{margin:0;border:0;border-radius:0}#mapPanelTitle{display:none}#courseMapDialog #map{height:calc(80dvh - 116px);min-height:180px}#courseMapDialog .map-display{padding:10px}.header-tools button{font-size:11px!important}</style><style>.extras-panel>summary{font-size:17px;font-weight:800;cursor:pointer}.extras-panel[open]>summary{margin-bottom:14px}.extras-tabs{display:flex;gap:8px;margin-bottom:16px}.extras-tabs button{flex:1;background:#eef2f6;color:#405265;min-height:42px}.extras-tabs button[aria-pressed="true"]{background:#0f766e;color:white}.extras-panel .coffee-panel{border:0;padding:0;margin:0}.extras-panel #favoritesPanel{border:0;padding:0;margin:0;background:transparent}.extras-panel .food-heading{gap:10px}.extras-panel #foodSummary{display:none}.extras-panel .food-tabs{display:flex;width:100%}.extras-panel .food-tabs button{flex:1;min-width:0}#extrasSelected{border-top:1px solid #e2e8f0;margin-top:18px;padding-top:12px}#extrasSelected h4{font-size:13px;margin:0 0 8px}#extrasSelected ol{padding-left:20px;margin:0;font-size:12px;line-height:1.8}#extrasSelected li span{color:#0f766e;font-weight:700}.header-progress nav button{font-size:10px}</style><style>#coursePanel>summary,#travelCardPanel>summary,#returnPanel>summary{font-size:16px;font-weight:800;cursor:pointer}#coursePanel[open]>summary,#travelCardPanel[open]>summary,#returnPanel[open]>summary{margin-bottom:14px}#coursePanel #waypointInfo>h3:first-child{display:none}</style><style>.saved-course-actions{display:flex;gap:8px;margin:12px 0}.saved-course-actions button{flex:1;min-height:40px}#deleteAllSchedulesButton{background:#fff1f0;color:#a52a2a;border:1px solid #f0cdca}</style><style>html.installed-app .header-title{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}html.installed-app .header-title h1{min-width:0;font-size:clamp(13px,4vw,17px);gap:5px;flex-wrap:wrap;white-space:normal}html.installed-app .header-tools{display:flex;min-width:0;margin:0;width:auto}html.installed-app .header-tools #courseMapButton{flex:none;min-height:40px;padding:10px 14px;white-space:nowrap}</style><style>.header-tools #courseMapButton{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#0f766e;color:#fff;border:1px solid #40b5a6;box-shadow:0 2px 8px #00000016}.header-tools #courseMapButton:hover{background:#0d655e}.header-tools #courseMapButton:focus-visible{outline:3px solid #99f6e4;outline-offset:3px}.map-button-icon{flex:0 0 17px}</style><style>#parkingPanel{border:1px solid #e6c776;background:#fffcf3}#parkingPanel>summary{color:#75531a;font-size:15px;line-height:1.6}</style><style>
 .header-tools #testStatsButton{display:inline-flex;align-items:center;justify-content:center;flex:.8;min-width:0;min-height:40px;padding:9px 6px;border:1px solid #7dd3fc66;border-radius:10px;background:#164e63;color:#e0f2fe;font-size:11px;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap}.header-tools #testStatsButton:hover{background:#155e75}.header-tools #testStatsButton:focus-visible{outline:3px solid #7dd3fc;outline-offset:3px}html.installed-app .header-tools #testStatsButton{flex:none}@media(max-width:360px){.header-title:has(#testStatsButton:not([hidden])){grid-template-columns:minmax(0,1fr)}.header-title:has(#testStatsButton:not([hidden])) h1{flex-wrap:wrap;white-space:normal}}
-</style><script src="./pwa/charger-status.js?v=3.33"></script><style>#courseMapDialog[open]{display:flex;flex-direction:column}#courseMapDialog[open] #mapPanel{display:flex;flex:1;min-height:0;flex-direction:column;margin:0;border:0;border-radius:0}#courseMapDialog[open] #map{flex:1;height:auto;min-height:140px}#courseMapDialog .course-map-heading,#courseMapDialog .map-display{flex-shrink:0}.map-catalog-status{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f7f6;color:#34534e;font-size:12px;line-height:1.5;flex-shrink:0}.map-catalog-status span{flex:1}.map-catalog-status button{background:#0f766e;color:#fff;white-space:nowrap;padding:8px 10px;font-size:12px}.map-catalog-status button[hidden]{display:none}</style></head>
+</style><script src="./pwa/charger-status.js?v=3.33"></script><style>#courseMapDialog[open]{display:flex;flex-direction:column}#courseMapDialog[open] #mapPanel{display:flex;flex:1;min-height:0;flex-direction:column;margin:0;border:0;border-radius:0}#courseMapDialog[open] #map{flex:1;height:auto;min-height:140px}#courseMapDialog .course-map-heading,#courseMapDialog .map-display{flex-shrink:0}.map-catalog-status{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f7f6;color:#34534e;font-size:12px;line-height:1.5;flex-shrink:0}.map-catalog-status span{flex:1}.map-catalog-status button{background:#0f766e;color:#fff;white-space:nowrap;padding:8px 10px;font-size:12px}.map-catalog-status button[hidden]{display:none}
+#apiVerification{box-sizing:border-box;border:0;background:white;color:#172631}
+#apiVerification:not(:modal){position:static;width:auto;margin:0 10px;padding:0}
+#apiVerification:not(:modal) .verification-back{display:none}
+#apiVerification p{margin:0;padding:10px 0;font-size:14px}
+#apiVerification:modal{width:min(360px,calc(100% - 16px));max-height:calc(100dvh - 24px);overflow:auto;padding:14px;border-radius:14px}
+#apiVerification::backdrop{background:#08162385}
+.verification-back{margin-top:8px}
+</style></head>
 <body>
 <dialog id="chromeOpenDialog" aria-labelledby="chromeOpenTitle"><h3 id="chromeOpenTitle">크롬에서 열기</h3><p id="chromeOpenGuide"></p><div class="actions"><a id="chromeOpenLink" class="btn" hidden>Chrome으로 열기</a><button id="chromeOpenClose" type="button">닫기</button></div></dialog>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.39</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.40</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -279,6 +287,19 @@ let myPos=null,dest=null,route=null,routeLayer=null,recommendMode=false;
 let originSearchSequence=0,originCandidates=[];
 const KAKAO_ROUTE_BASE=location.hostname==='nacs-map-preview.hoy-kim.workers.dev'?location.origin+'/preview-api':'https://nacs-map-recommend-test.hoy-kim.workers.dev';
 let apiSession=null,apiSessionPending=null;
+function openMapVerification(panel){
+ if(!panel || !courseMapDialog.open)return;
+ if(typeof panel.showModal!=='function'){closeCourseMap();panel.scrollIntoView({block:'center'});return;}
+ if(panel.matches(':modal'))return;
+ // Promote the same dialog to the top layer. Reparenting its iframe restarts Turnstile.
+ panel.close();
+ panel.showModal();
+}
+function returnFromVerification(panel){
+ panel.close();
+ panel.open=true;
+ document.getElementById('mapCatalogRetry')?.focus({preventScroll:true});
+}
 async function verifiedSession(){
  if(apiSession&&apiSession.expires*1000>Date.now()+30000)return apiSession.token;
  if(apiSessionPending)return apiSessionPending;
@@ -287,21 +308,43 @@ async function verifiedSession(){
   if(config.passwordSession===true&&KAKAO_ROUTE_BASE===location.origin+'/preview-api'){
    const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('테스트 로그인 상태를 확인해 주세요.');apiSession=await r.json();return apiSession.token;
   }
-  let panel=document.getElementById('apiVerification');if(!panel){panel=document.createElement('section');panel.id='apiVerification';panel.style.cssText='margin:0 10px;background:white;border-radius:10px;';document.querySelector('header').insertAdjacentElement('afterend',panel);}panel.replaceChildren();const message=document.createElement('p');message.textContent='보안 확인이 필요합니다.';message.hidden=true;panel.appendChild(message);const box=document.createElement('div');panel.appendChild(box);
+  const panel=document.createElement('dialog');
+  panel.id='apiVerification';
+  panel.open=true;
+  panel.setAttribute('aria-labelledby','verificationMessage');
+  const message=document.createElement('p');
+  message.id='verificationMessage';
+  message.textContent='보안 확인을 완료해 주세요.';
+  message.hidden=true;
+  const box=document.createElement('div');
+  const back=document.createElement('button');
+  back.type='button';
+  back.className='verification-back';
+  back.textContent='지도로 돌아가기';
+  back.onclick=()=>returnFromVerification(panel);
+  panel.addEventListener('cancel',event=>{event.preventDefault();returnFromVerification(panel);});
+  panel.append(message,box,back);
+  document.querySelector('header').insertAdjacentElement('afterend',panel);
+  function showVerification(){
+   message.hidden=false;
+   panel.dataset.interactive='true';
+   syncMapCatalogStatus();
+  }
   try{
    if(!window.turnstile)await new Promise((resolve,reject)=>{let script=document.getElementById('turnstileLoader');if(!script){script=document.createElement('script');script.id='turnstileLoader';script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';document.head.appendChild(script);}script.addEventListener('load',resolve,{once:true});script.addEventListener('error',()=>reject(Error('보안 확인에 연결하지 못했습니다.')),{once:true});setTimeout(()=>reject(Error('보안 확인 시간이 초과됐습니다. 새로고침해 주세요.')),15000);});
    const challenge=await new Promise((resolve,reject)=>{
     let widget,finished=false,retryTimer=null,failures=0;
     const finish=(error,token)=>{if(finished)return;finished=true;clearTimeout(timeout);clearTimeout(retryTimer);if(widget!==undefined)setTimeout(()=>{try{window.turnstile.remove(widget);}catch{}},0);error?reject(error):resolve(token);};
     const timeout=setTimeout(()=>finish(Error('보안 확인 시간이 초과됐습니다. 다시 시도해 주세요.')),120000);
-    try{widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',appearance:'interaction-only',retry:'never',
-     'before-interactive-callback':()=>{message.hidden=false;panel.style.padding='12px';},'after-interactive-callback':()=>{message.hidden=true;panel.style.padding='0';},
+    try{widget=window.turnstile.render(box,{sitekey:config.siteKey,action:'nacs_api',appearance:'interaction-only',size:window.innerWidth<380?'compact':'normal',retry:'never',
+     'before-interactive-callback':showVerification,
+     'after-interactive-callback':()=>{panel.dataset.interactive='';message.textContent='보안 확인 중…';message.hidden=!panel.matches(':modal');syncMapCatalogStatus();},
      callback:token=>finish(null,token),
      'error-callback':code=>{if(finished)return true;if(++failures===1&&/^(200500|300|600)/.test(String(code))){message.textContent='보안 연결을 다시 확인하고 있습니다…';message.hidden=false;retryTimer=setTimeout(()=>{if(!finished){try{window.turnstile.reset(widget);}catch{finish(Error('보안 확인을 다시 시작하지 못했습니다.'));}}},1000);return true;}finish(Error('보안 확인에 실패했습니다. 다시 시도해 주세요.'));return true;}
     });}catch(e){finish(e);}
    });
    const r=await fetch(KAKAO_ROUTE_BASE+'/v1/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenge}),signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('보안 확인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');apiSession=await r.json();return apiSession.token;
-  }finally{panel.remove();}
+  }finally{panel.remove();syncMapCatalogStatus();}
  })();try{return await apiSessionPending;}finally{apiSessionPending=null;}
 }
 async function apiFetch(input,options={}){
@@ -941,13 +984,20 @@ function syncMapPlaceButtons(){for(const [id,on] of [['chargerMapToggle',showCha
 function toggleMapPlaces(kind){if(kind==='charger'){showChargerMarkers=!showChargerMarkers;if(recommendMode&&lastRecommendedResults.length)renderRecommended(sortRecommendedResults(lastRecommendedResults,resultSortMode));else render();}else{document.getElementById('showFavorites').checked=!document.getElementById('showFavorites').checked;renderFavorites();}syncMapPlaceButtons();}
 function syncMapCatalogStatus(){
  const message=document.getElementById('mapCatalogMessage'),retry=document.getElementById('mapCatalogRetry');if(!message||!retry)return;
+ const verification=document.getElementById('apiVerification');
+ if(verification?.dataset?.interactive==='true'){
+  message.textContent='충전소·맛집을 표시하려면 보안 확인을 완료해 주세요.';
+  retry.textContent='보안 확인';retry.hidden=false;retry.disabled=false;
+  return;
+ }
  const ready=catalogSource==='d1',foodOn=document.getElementById('showFavorites').checked;
- retry.hidden=ready;retry.textContent=catalogSource==='loading'?'연결 상태 확인':'목록 다시 연결';
+ retry.hidden=ready||catalogSource==='loading';retry.disabled=false;retry.textContent='목록 다시 연결';
  message.textContent=ready?(showChargerMarkers?'충전소 표시 켜짐':'충전소 표시 꺼짐')+' · '+(foodOn?'맛집 표시 켜짐':'맛집은 아래 버튼을 눌러 표시'):(catalogSource==='loading'?'충전소·맛집 목록을 불러오고 있습니다. 지도 배경과 별도로 연결됩니다.':(catalogError||'장소 목록에 연결하지 못했습니다.')+' 충전소·맛집 표시를 위해 다시 연결해 주세요.');
 }
 async function retryMapCatalog(){
- closeCourseMap();const status=document.getElementById('status');status.hidden=false;status.textContent='충전소·맛집 목록에 연결하고 있습니다. 보안 확인이 나오면 완료해 주세요.';
- const result=await loadServerCatalog();if(result==='d1')revealMap();else{status.hidden=false;if(status.scrollIntoView)status.scrollIntoView({behavior:'smooth',block:'center'});}
+ const panel=document.getElementById('apiVerification');
+ if(panel?.dataset?.interactive==='true'){openMapVerification(panel);return;}
+ await loadServerCatalog();
 }
 function favoriteOriginDistance(f){if(!myPos||![myPos.lat,myPos.lon,f.lat,f.lon].every(Number.isFinite))return '';const km=hav(myPos,f);return (originName().startsWith('현재 위치')?'현재 위치':'출발지')+'에서 직선 '+km.toFixed(1)+'km';}
 function renderFavorites(){
@@ -1211,7 +1261,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.39',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.40',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
