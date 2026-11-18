@@ -19,9 +19,22 @@ async function visibleImages(page) {
 (async () => {
   let browser, stage = 'Chrome startup';
   const statuses = {};
+  const pendingScripts = new Map();
   try {
     browser = await chromium.launch({channel:'chrome', headless:false});
     const page = await browser.newPage({viewport:{width:1280,height:800},serviceWorkers:'block'});
+    // Only hostnames / numeric statuses are logged. Query strings may contain widget keys.
+    page.on('request', r=>{
+      if(r.resourceType()==='script')pendingScripts.set(r,new URL(r.url()).hostname);
+    });
+    page.on('requestfinished', r=>pendingScripts.delete(r));
+    page.on('requestfailed', r=>{
+      pendingScripts.delete(r);
+      if(['script','document'].includes(r.resourceType())){
+        const reason=(r.failure()?.errorText||'').match(/net::ERR_[A-Z_]+/)?.[0]||'failed';
+        console.log('Browser resource failure',new URL(r.url()).hostname,reason);
+      }
+    });
     page.on('response', response => {
       const u = new URL(response.url());
       if (u.origin === api && ['/v1/auth/config','/v1/auth/session','/v1/catalog','/v1/chargers','/v1/restaurants'].includes(u.pathname))
@@ -29,14 +42,23 @@ async function visibleImages(page) {
     });
     stage = 'load candidate at the public origin';
     await page.route(origin, async route => {
-      const live = await route.fetch();
-      assert.equal(live.status(),200);
-      await route.fulfill({response:live, body:fs.readFileSync('index.html')});
+      try{
+        const live=await route.fetch({timeout:30000});
+        console.log('Production document HTTP',live.status());
+        assert.equal(live.status(),200);
+        await route.fulfill({response:live,body:fs.readFileSync('index.html')});
+      }catch(error){
+        console.log('Production document fetch or override failed',error.name);
+        await route.abort('failed').catch(()=>{});
+      }
     });
-    await page.goto(origin,{waitUntil:'domcontentloaded',timeout:45000});
+    await page.goto(origin,{waitUntil:'commit',timeout:45000});
     assert.equal(page.url(),origin);
-    assert.match(await page.title(),/V3\.45/);
+    stage='candidate document title';
+    await page.waitForFunction(()=>document.title.includes('V3.45'),null,{timeout:20000});
     console.log('Candidate version and public origin verified');
+    stage='application scripts and map controls';
+    await page.waitForFunction(()=>typeof loadServerCatalog==='function' && typeof courseMapDialog!=='undefined',null,{timeout:90000});
     await page.locator('#courseMapButton').click();
     stage = 'public authentication';
     await page.waitForFunction(()=>catalogSource==='d1'||catalogSource==='error'||
@@ -90,8 +112,9 @@ async function visibleImages(page) {
       document.querySelector('#scheduleOutput')?.textContent.includes('거창휴게소 대구방향'),null,{timeout:35000});
     assert.ok(interrupted>0&&retried>0);
     console.log('PASS: travel card created after one retry');
-  } catch {
-    console.error('Not passed at:', stage);
+  } catch (error) {
+    console.error('Not passed at:',stage,error.name);
+    console.log('Outstanding script hosts:',[...new Set(pendingScripts.values())].join(',')||'none');
     process.exitCode=1;
   } finally {
     console.log('Public API HTTP statuses:', JSON.stringify(statuses));
