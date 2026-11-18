@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>전국 NACS 충전지도 V3.43</title>
+<title>전국 NACS 충전지도 V3.44</title>
 <link rel="manifest" href="./pwa/manifest.webmanifest" crossorigin="use-credentials">
 <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -79,7 +79,7 @@ header{background:linear-gradient(120deg,#101c30,#112d35);box-shadow:0 3px 14px 
 <body>
 <dialog id="chromeOpenDialog" aria-labelledby="chromeOpenTitle"><h3 id="chromeOpenTitle">크롬에서 열기</h3><p id="chromeOpenGuide"></p><div class="actions"><a id="chromeOpenLink" class="btn" hidden>Chrome으로 열기</a><button id="chromeOpenClose" type="button">닫기</button></div></dialog>
 <dialog id="homeInstallDialog" aria-labelledby="homeInstallTitle"><h3 id="homeInstallTitle">홈화면에 추가</h3><p id="homeInstallGuide"></p><div class="actions"><a id="homeInstallBrowser" class="btn" hidden>Chrome에서 열기</a><button id="homeInstallClose" type="button">닫기</button></div></dialog>
-<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.43</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
+<header><div class="header-title"><h1>⚡ 전국 NACS 충전지도 <small style="font-size:11px">V3.44</small><span id="testServerBadge" hidden>TEST 서버</span></h1><div class="header-tools"><button id="courseMapButton" type="button" onclick="revealMap()"><svg class="map-button-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg><span id="courseMapButtonLabel">코스 지도</span></button><button id="chromeOpenButton" type="button">크롬에서 열기</button><button id="homeInstallButton" type="button">홈화면에 추가</button><a id="testStatsButton" href="/admin/" target="_blank" rel="noopener noreferrer" aria-label="통계보기 (새 창)" hidden>통계보기</a></div></div><p>TESLA Supercharger · WATER · CHAEVI · SK일렉링크</p><div class="header-progress"><nav aria-label="코스 준비 단계" id="headerProgress"></nav><button onclick="resetTrip()">초기화</button></div></header>
 <script>
 // The same approved file hides the test label on the production site.
 if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-preview.hoy-kim.workers.dev')&&/^\/nacs-map-test(?:\/|$)/.test(location.pathname)){
@@ -94,7 +94,7 @@ if((location.hostname==='yluby-a11y.github.io'||location.hostname==='nacs-map-pr
 <section class="trip-input" id="tripInputs">
 <p id="routeSettingsSummary" class="input-guide" hidden></p><details id="routeSettings" open><summary class="route-settings-title">경로 설정 <span class="route-edit-label">수정</span></summary><div class="route-settings-fields">
 <div class="route-fields">
-<div class="route-field"><label for="origin">출발지</label><div class="trip-input-row"><input id="origin" placeholder="미선택 시 현재 위치"><button class="place-search" aria-label="출발지 검색" onclick="setOrigin()">검색</button></div><div id="originResults" style="display:none" aria-live="polite"></div></div>
+<div class="route-field"><label for="origin">출발지</label><div class="trip-input-row"><input id="origin" placeholder="미선택 시 현재 위치"><button class="place-search" aria-label="출발지 검색" onclick="setOrigin()">검색</button></div><div id="originLocationStatus" class="input-guide" style="grid-column:1/-1" hidden><span id="originLocationMessage" role="status"></span> <button id="originLocationRetry" type="button" onclick="showMyLocation()" hidden>현재 위치 다시 확인</button></div><div id="originResults" style="display:none" aria-live="polite"></div></div>
 <div class="route-field"><label for="destination">목적지</label><div class="trip-input-row"><input id="destination" placeholder="장소 또는 주소 입력"><button class="place-search" aria-label="목적지 검색" onclick="setDestination()">검색</button></div><div id="destResults" style="display:none" aria-live="polite"></div></div>
 </div>
 <p id="routeInfo" class="input-guide">경로와 주행가능거리를 확인한 뒤, 아래 충전소 추천을 눌러주세요.</p>
@@ -571,20 +571,21 @@ async function fetchRoute(url,signal,priority=routePriority){
  if(!response.ok)throw Error('경로 서버에 연결하지 못했습니다.');return response.json();
 }
 async function setOrigin(){
- const q=document.getElementById('origin').value.trim(),box=document.getElementById('originResults');if(!q){box.style.display='block';box.textContent='출발지를 입력해 주세요.';return;}
+ const q=document.getElementById('origin').value.trim(),box=document.getElementById('originResults');if(!q){return showMyLocation();}
+ setLocationStatus('');
  const sequence=++originSearchSequence;box.style.display='block';box.textContent='출발지 검색 중…';
  try{const results=await geocodeText(q);if(sequence!==originSearchSequence)return;originCandidates=results;
   box.innerHTML=results.length?results.map((r,i)=>'<button data-lat="'+r.lat+'" data-lon="'+r.lon+'" onclick="chooseOrigin('+i+')" class="place-result"><b>'+escapeHTML(r.name)+'</b><br>'+escapeHTML(r.display)+'</button>').join(''):'검색 결과가 없습니다. 지역명과 함께 검색해 주세요.';
  }catch(e){if(sequence===originSearchSequence)box.textContent='출발지 검색에 실패했습니다. 잠시 후 다시 시도해 주세요.';}
 }
 function chooseOrigin(i){
- const r=originCandidates[i];if(!r)return;originSearchSequence++;myPos={lat:r.lat,lon:r.lon,name:r.name,address:r.address||r.display?.split(' · ').slice(1).join(' · ')||''};
+ const r=originCandidates[i];if(!r)return;originSearchSequence++;setLocationStatus('');myPos={lat:r.lat,lon:r.lon,name:r.name,address:r.address||r.display?.split(' · ').slice(1).join(' · ')||''};
  if(myMarker)map.removeLayer(myMarker);myMarker=mapUI.marker([r.lat,r.lon]).addTo(map).bindPopup('출발지: '+escapeHTML(r.name));
  document.getElementById('origin').value=r.name;document.getElementById('originResults').style.display='none';
  invalidateRecommendation();updateCourseRoute();renderWaypoint();renderFavorites();document.getElementById('status').textContent='출발지 선택 완료: '+r.name;
 }
 function clearOrigin(){
- originSearchSequence++;myPos=null;if(myMarker){map.removeLayer(myMarker);myMarker=null;}
+ originSearchSequence++;setLocationStatus('');myPos=null;if(myMarker){map.removeLayer(myMarker);myMarker=null;}
  document.getElementById('origin').value='';document.getElementById('originResults').style.display='none';
  invalidateRecommendation();updateCourseRoute();renderWaypoint();renderFavorites();
 }
@@ -636,7 +637,7 @@ function currentLocationArea(lat,lon){
  return new Promise(resolve=>{
   if(typeof kakao==='undefined'||!kakao.maps.services){resolve('');return;}
   const timer=setTimeout(()=>resolve(''),3000);
-  try{new kakao.maps.services.Geocoder().coord2RegionCode(lon,lat,(data,status)=>{clearTimeout(timer);const area=status===kakao.maps.services.Status.OK?(data.find(x=>x.region_type==='B')||data[0]):null;resolve(area?.address_name||'');});}catch(e){clearTimeout(timer);resolve('');}
+  try{new kakao.maps.services.Geocoder().coord2RegionCode(lon,lat,(data,status)=>{clearTimeout(timer);const area=Array.isArray(data)&&status===kakao.maps.services.Status.OK?(data.find(x=>x?.region_type==='B')||data[0]):null;resolve(area?.address_name||'');});}catch(e){clearTimeout(timer);resolve('');}
  });
 }
 function locationErrorMessage(e){
@@ -645,30 +646,56 @@ function locationErrorMessage(e){
  if(e?.code===3)return '현재 위치 확인 시간이 초과됐습니다. 다시 시도하거나 출발지를 직접 검색해 주세요.';
  return e?.message==='출발지가 변경되었습니다.'?e.message:'현재 위치를 확인하지 못했습니다. 브라우저 위치 권한을 확인하거나 출발지를 직접 검색해 주세요.';
 }
+function setLocationStatus(message,retry=false){
+ document.getElementById('originLocationMessage').textContent=message;
+ document.getElementById('originLocationRetry').hidden=!retry;
+ document.getElementById('originLocationStatus').hidden=!message;
+}
 function showLocationRetry(e){
- document.getElementById('routePreviewStatus').innerHTML=escapeHTML(locationErrorMessage(e))+' <button type="button" onclick="showMyLocation()">현재 위치 다시 확인</button>';
+ if(e?.message==='출발지가 변경되었습니다.')return;
+ setLocationStatus(locationErrorMessage(e),true);
 }
 function requestCurrentPosition(){
  return new Promise((resolve,reject)=>{
   if(!navigator.geolocation){reject(new Error('위치 기능을 지원하지 않는 브라우저입니다.'));return;}
-  navigator.geolocation.getCurrentPosition(resolve,e=>{
-   if(e.code===1){reject(e);return;}
-   navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:false,timeout:8000,maximumAge:60000});
-  },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  // Browser position timeouts can exclude time spent waiting for a permission prompt.
+  let settled=false;
+  const finish=(callback,value)=>{if(settled)return;settled=true;clearTimeout(deadline);callback(value);};
+  const deadline=setTimeout(()=>finish(reject,{code:3}),22000);
+  const success=position=>finish(resolve,position),failure=error=>finish(reject,error);
+  try{navigator.geolocation.getCurrentPosition(success,e=>{
+   if(settled)return;
+   if(e.code===1){failure(e);return;}
+   try{navigator.geolocation.getCurrentPosition(success,failure,{enableHighAccuracy:false,timeout:8000,maximumAge:60000});}catch(error){failure(error);}
+  },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});}catch(error){failure(error);}
  });
 }
+let originLocationTask=null;
 function getMyPos(center=true){
- return new Promise((resolve,reject)=>{
-  if(!navigator.geolocation){reject(new Error('geolocation unsupported'));return}
+ if(originLocationTask?.sequence===originSearchSequence){originLocationTask.center ||= center;return originLocationTask.promise;}
   const sequence=++originSearchSequence;
-  requestCurrentPosition().then(async pos=>{
-   if(sequence!==originSearchSequence){reject(Error('출발지가 변경되었습니다.'));return;}const lat=pos.coords.latitude,lon=pos.coords.longitude,area=await currentLocationArea(lat,lon);if(sequence!==originSearchSequence){reject(Error('출발지가 변경되었습니다.'));return;}myPos={lat,lon,name:area?'현재 위치 ('+area+')':'현재 위치',address:area};document.getElementById('origin').value=myPos.name;document.getElementById('originResults').style.display='none';if(center)invalidateRecommendation();
+  const task={sequence,center};originLocationTask=task;
+  setLocationStatus('현재 위치를 확인하고 있습니다…');
+  task.promise=requestCurrentPosition().then(pos=>{
+   if(sequence!==originSearchSequence)throw Error('출발지가 변경되었습니다.');
+   const lat=pos.coords.latitude,lon=pos.coords.longitude;
+   const origin={lat,lon,name:'현재 위치',address:''},input=document.getElementById('origin');
+   myPos=origin;input.value=origin.name;setLocationStatus('');document.getElementById('originResults').style.display='none';
+   if(task.center)invalidateRecommendation();
    if(myMarker)map.removeLayer(myMarker);
    myMarker=mapUI.circleMarker([myPos.lat,myPos.lon],{radius:8,weight:3}).addTo(map).bindPopup('내 위치');
-   if(center){map.setView([myPos.lat,myPos.lon],13);myMarker.openPopup()}
-   updateCourseRoute();render();renderWaypoint();renderFavorites();resolve(myPos);
-  }).catch(reject);
- });
+   if(task.center){map.setView([lat,lon],13);myMarker.openPopup()}
+   updateCourseRoute();render();renderWaypoint();renderFavorites();
+   currentLocationArea(lat,lon).then(area=>{
+    if(!area||myPos!==origin||sequence!==originSearchSequence)return;
+    origin.address=area;origin.name='현재 위치 ('+area+')';
+    if(input.value==='현재 위치')input.value=origin.name;
+    renderWaypoint();
+   });
+   return origin;
+  },error=>{if(sequence!==originSearchSequence)throw Error('출발지가 변경되었습니다.');throw error;})
+  .finally(()=>{if(originLocationTask===task)originLocationTask=null;});
+  return task.promise;
 }
 async function showMyLocation(){
  try{await getMyPos(true)}
@@ -1328,7 +1355,7 @@ async function submitErrorReport(){
  if(message.length<5||message.length>1500){status.textContent='오류 상황을 5~1500자로 적어 주세요.';return;}
  const ua=navigator.userAgent,platform=/Android/i.test(ua)?'Android':/iPhone|iPad/i.test(ua)?'iOS':/Windows|Macintosh|Linux/i.test(ua)?'PC':'other';
  button.disabled=true;status.textContent='리포트를 보내고 있습니다…';
- try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.43',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
+ try{const response=await apiFetch(KAKAO_ROUTE_BASE+'/v1/error-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'V3.44',category:document.getElementById('reportCategory').value,message,platform}),timeoutMs:12000});if(!response.ok)throw Error(response.status===429?'잠시 후 다시 보내 주세요.':'전송하지 못했습니다. 다시 시도해 주세요.');const data=await response.json();status.textContent='접수 완료 · 번호 '+data.id;document.getElementById('reportMessage').value='';}catch(e){status.textContent=e.name==='TimeoutError'?'접수 여부를 확인하지 못했습니다. 중복 전송 전에 잠시 기다려 주세요.':e.message;}finally{button.disabled=false;}
 }
 function arrivalRangeKm(p){
  const last=p.chargeTargets?.at(-1),total=p.placeDistancesKm?.at(-1)??p.distanceKm;
