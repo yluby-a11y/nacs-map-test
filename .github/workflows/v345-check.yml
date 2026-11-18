@@ -1,0 +1,22 @@
+name: V3.45 Chrome release check
+on:
+  push:
+    branches:
+      - qa/v345-chrome-20261118
+permissions:
+  contents: read
+jobs:
+  chrome:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check candidate and prepare Chrome test
+        run: |
+          echo '2a39c0e37ee5ccba838adc353bd5313030c54e29825293867e88ae13bacbb2b0  index.html' | sha256sum --check
+          google-chrome --version
+          npm install --prefix "$RUNNER_TEMP/map-qa" --ignore-scripts --no-audit --no-fund playwright-core@1.56.1
+      - name: Check public authentication, pins and one-click recovery
+        run: NODE_PATH="$RUNNER_TEMP/map-qa/node_modules" xvfb-run -a node .github/checks/public-chrome.cjs
